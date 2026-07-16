@@ -2,23 +2,45 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 const SPACING = 0.8;
-const DOT_SIZE_PX = 5.5;
+const DOT_SIZE_PX = 7.5;
 const BACKGROUND_COLOR = 0x030304;
 const DOT_COLOR = new THREE.Color("#e4e4e7");
 const CAMERA_Z = 25;
 const CAMERA_FOV = 50;
 
+// Each dot gets its own random start time within this window, so the
+// field visibly fills in — a few dots, then more, then more — rather
+// than the whole field brightening uniformly.
+const STAGGER_WINDOW_SECONDS = 2.0;
+// Once a dot's turn comes, how long its own fade-in takes.
+const PARTICLE_FADE_SECONDS = 0.9;
+
+// Exported so other landing-sequence UI (About's text fade) can wait
+// until the particle field has essentially finished appearing.
+export const LANDING_SEQUENCE_MS =
+  (STAGGER_WINDOW_SECONDS + PARTICLE_FADE_SECONDS) * 1000;
+
 const VERTEX_SHADER = `
   attribute float aPhase;
-  uniform float uTime;
+  attribute float aAppearAt;
+  uniform float uOscTime;
+  uniform float uAppearElapsed;
   uniform float uSize;
+  uniform float uParticleFadeSeconds;
   varying float vOpacity;
 
   void main() {
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_PointSize = uSize;
     gl_Position = projectionMatrix * mvPosition;
-    vOpacity = 0.05 + 0.85 * (0.5 + 0.5 * sin(uTime + aPhase));
+
+    float appear = clamp(
+      (uAppearElapsed - aAppearAt) / uParticleFadeSeconds,
+      0.0,
+      1.0
+    );
+    float breathe = 0.05 + 0.85 * (0.5 + 0.5 * sin(uOscTime + aPhase));
+    vOpacity = appear * breathe;
   }
 `;
 
@@ -47,6 +69,7 @@ function buildGeometry(width: number, height: number) {
 
   const positions = new Float32Array(count * 3);
   const phases = new Float32Array(count);
+  const appearTimes = new Float32Array(count);
 
   let i = 0;
   for (let x = 0; x < cols; x++) {
@@ -55,6 +78,7 @@ function buildGeometry(width: number, height: number) {
       positions[i * 3 + 1] = (y - rows / 2) * SPACING;
       positions[i * 3 + 2] = (Math.random() - 0.5) * 2;
       phases[i] = Math.random() * Math.PI * 2;
+      appearTimes[i] = Math.random() * STAGGER_WINDOW_SECONDS;
       i++;
     }
   }
@@ -62,6 +86,10 @@ function buildGeometry(width: number, height: number) {
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
+  geometry.setAttribute(
+    "aAppearAt",
+    new THREE.BufferAttribute(appearTimes, 1),
+  );
   return geometry;
 }
 
@@ -96,9 +124,15 @@ export default function DotBackground() {
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
-        uTime: { value: 0 },
+        uOscTime: { value: 0 },
+        uAppearElapsed: {
+          value: prefersReducedMotion
+            ? STAGGER_WINDOW_SECONDS + PARTICLE_FADE_SECONDS
+            : 0,
+        },
         uSize: { value: DOT_SIZE_PX * pixelRatio },
         uColor: { value: DOT_COLOR },
+        uParticleFadeSeconds: { value: PARTICLE_FADE_SECONDS },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
@@ -114,7 +148,9 @@ export default function DotBackground() {
     let frameId: number | null = null;
 
     const render = () => {
-      material.uniforms.uTime.value = clock.getElapsedTime() * 1.4;
+      const elapsed = clock.getElapsedTime();
+      material.uniforms.uOscTime.value = elapsed * 2.4;
+      material.uniforms.uAppearElapsed.value = elapsed;
       renderer.render(scene, camera);
       if (!prefersReducedMotion) {
         frameId = requestAnimationFrame(render);
@@ -122,8 +158,9 @@ export default function DotBackground() {
     };
 
     if (prefersReducedMotion) {
-      // Static frame: uTime stays 0, so aPhase alone still gives each dot
-      // its own resting opacity — organic, just not animating.
+      // Static frame, fully visible immediately: uOscTime stays 0 so
+      // aPhase alone still gives each dot its own resting opacity —
+      // organic, just not animating and no staged reveal motion.
       renderer.render(scene, camera);
     } else {
       frameId = requestAnimationFrame(render);
