@@ -126,5 +126,9 @@
   }
   html {
     @apply font-sans;
+    scrollbar-width: none; /* Firefox */
+  }
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
   }
 }

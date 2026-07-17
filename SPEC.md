@@ -28,7 +28,7 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 - **"Personal AI Workflow: Noctis" section** — locked copy, see Design Brief section 4 below.
 - **Projects section** — schema supports up to 6 slots; 2 populated at launch.
 - **Each project has two states:**
-  - *Collapsed:* a floating, slowly-rotating glass shard (see Design Brief section 3).
+  - *Collapsed:* a suspended, reflective card showing the project's own demo media on its face, gently swaying in place (see Design Brief section 3).
   - *Expanded:* demo media, title, "about this project" writeup, GitHub stat card — fills most of the viewport but leaves a margin (not full-bleed; background stays visible at the edges).
 - **Expand mechanism** (see Design Brief section 5 for full detail — hover+scroll on desktop, tap on mobile, click/tap always works as a fallback regardless of gesture support).
 - **GitHub stat card** inside the expanded view (stars, primary language, etc.) — clickable, exits to the actual repo.
@@ -48,7 +48,7 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 
 ### User flow
 
-Landing (dot-field background fades in, dots out of sync with each other) → About section (LinkedIn + Devpost at the bottom) → AI Workflow section → Projects section, shards floating/rotating independently → hover + scroll a shard to expand it in place; if the writeup is long, continued scroll once fully expanded scrolls the content internally rather than continuing to expand → scroll back (or move cursor off, which triggers a slow snap-back) to collapse → repeat for the next shard. The whole portfolio is the shareable unit — no per-project deep link, no route changes anywhere on the page.
+Landing (dot-field background fades in, dots out of sync with each other) → About section (LinkedIn + Devpost at the bottom) → AI Workflow section → Projects section, reflective cards floating/swaying independently → hover + scroll a card to expand it in place; if the writeup is long, continued scroll once fully expanded scrolls the content internally rather than continuing to expand → scroll back (or move cursor off, which triggers a slow snap-back) to collapse → repeat for the next card. The whole portfolio is the shareable unit — no per-project deep link, no route changes anywhere on the page.
 
 ---
 
@@ -65,7 +65,7 @@ Shared FastAPI + PostgreSQL backend (Railway), serving two clients:
 - **FastAPI + PostgreSQL (Railway)** — persistent backend, real DB connections. Matches the standing rule: Railway for anything with a real backend, Vercel for static/serverless.
 - **React/Vite (Vercel)** — public site, static/serverless-shaped, no backend logic of its own.
 - **Python Textual (local)** — reuses the existing write-path pattern rather than building a second admin UI.
-- **Three.js** — shared background dot field + the shard rendering for project cards.
+- **Three.js** — shared background dot field + the reflective-card rendering for project cards.
 - **GitHub REST API** — free, read-only, backend-authenticated via a personal access token (5,000 req/hr authenticated vs. 60/hr unauthenticated — comfortable margin for a handful of fetches).
 
 ### Data model
@@ -90,11 +90,11 @@ Railway (FastAPI + Postgres backend), Vercel (React frontend) — locked per the
 
 ### Frontend implementation notes
 
-**Background dot field.** Adapted from the `dotted-surface` pattern: Three.js particle field, `fixed inset-0` for full-page coverage. Needs: `next-themes` stripped (no dark/light toggle in scope — hardcode the dark palette), a custom per-particle opacity fade animation with a randomized phase offset per particle for the "fade in/out of sync" loading effect (the reference component only animates Y-position via sine wave, not opacity — this is new work), and `prefers-reduced-motion` handling (not present in the reference component).
+**Background dot field.** Adapted from the `dotted-surface` pattern: Three.js particle field, `fixed inset-0` for full-page coverage. Needs: `next-themes` stripped (no dark/light toggle in scope — hardcode the dark palette), a custom per-particle opacity fade animation with a randomized phase offset per particle for the "fade in/out of sync" loading effect (the reference component only animates Y-position via sine wave, not opacity — this is new work), and `prefers-reduced-motion` handling (not present in the reference component). Also includes a cursor-repel interaction: dots within a small radius of the pointer spring away from it and ease back to their home position once the cursor moves off, giving the field a subtle reactive feel. Disabled under `prefers-reduced-motion` along with the rest of the field's motion.
 
-**Shard rendering.** One shared Three.js scene/renderer, **not** one WebGL canvas per card — running up to 6 independent WebGL contexts simultaneously is a real performance risk. Multiple mesh instances of the same shard geometry, positioned per card, each with its own rotation phase/speed/axis offset so cards don't read as synced copies of one asset. Material: `MeshPhysicalMaterial` with transmission + roughness for a glass look, an environment map for reflections, emissive facets + a bloom post-process pass for the violet glow — a stylized approximation of the reference image (see Design Brief section 3), not a literal ray-traced match; true physically-accurate refraction is out of scope for a real-time render on a v1 timeline.
+**Card rendering.** One shared Three.js scene/renderer, **not** one WebGL canvas per card — running up to 6 independent WebGL contexts simultaneously is a real performance risk. Multiple mesh instances of the same rounded-box card geometry, positioned per card, each with its own resting tilt, idle-sway phase/speed, and swipe-twirl state so cards don't read as synced copies of one asset. Material: `MeshPhysicalMaterial`, polished dark metal (high metalness, low roughness, clearcoat) on the edges/back for a mirror-like reflective slab, reflecting an environment map built from the same dotted-starfield motif as the page background; the front face carries a separate, less-metallic material instance with the project's own demo media applied as a texture (image, YouTube thumbnail, or a live video texture for self-hosted video) so each card shows a live preview of the project it represents.
 
-**Expand mechanism.** The `scroll-expansion-hero` reference component is **not used as-is** — it hijacks the whole page's wheel/touch events for a single full-viewport takeover, which doesn't repeat cleanly across up to 6 cards and has no click/tap trigger built in. Replaced with a **hover-scoped, per-shard scroll capture**: scroll only drives a given shard's expand progress while the cursor is over that specific shard; the page scrolls normally everywhere else. Full detail in Design Brief section 5. This also needs `next/image` (Next.js-only) ported to a plain `<img>` if any of the reference component's structure is reused.
+**Expand mechanism.** The `scroll-expansion-hero` reference component is **not used as-is** — it hijacks the whole page's wheel/touch events for a single full-viewport takeover, which doesn't repeat cleanly across up to 6 cards and has no click/tap trigger built in. Replaced with a **hover-scoped, per-card scroll capture**: scroll only drives a given card's expand progress while the cursor is over that specific card; the page scrolls normally everywhere else. Full detail in Design Brief section 5. This also needs `next/image` (Next.js-only) ported to a plain `<img>` if any of the reference component's structure is reused.
 
 ### Folder structure
 
@@ -125,11 +125,11 @@ portfolio-platform/
 │   │   │   ├── ProjectCard.tsx    # collapsed + expanded states
 │   │   │   ├── GithubStatCard.tsx
 │   │   │   ├── DemoMedia.tsx      # branches on demo_media_type
-│   │   │   ├── ShardScene.tsx     # shared Three.js scene, per-project mesh instances
+│   │   │   ├── ProjectCardScene.tsx # shared Three.js scene, per-project mesh instances
 │   │   │   └── DotBackground.tsx  # full-page particle field
 │   │   ├── hooks/
 │   │   │   ├── useProjects.ts     # fetches from backend, no direct GitHub calls
-│   │   │   └── useShardExpand.ts  # per-card hover-scoped scroll capture
+│   │   │   └── useCardExpand.ts   # per-card hover-scoped scroll capture
 │   │   ├── lib/api.ts              # backend API client
 │   │   └── App.tsx
 │   ├── .env.example
@@ -156,15 +156,15 @@ portfolio-platform/
 
 ### Palette & material
 
-Locked from a reference image: dark charcoal-grey background, floating glass/crystal shard forms in zero gravity, violet/white starburst glow on cracks and facets as the single accent color. Aim to get as close to the reference as feasible in a real-time render — see the EDD's frontend implementation notes for the stylized approximation approach (transmission material + emissive glow + bloom, not literal ray-traced refraction).
+Dark charcoal-grey background throughout. Project cards updated from the original glass-shard direction to **suspended reflective cards**: polished dark metal edges/back (mirror-like, picking up the same dotted-starfield environment reflections as an accent), with the project's own demo media shown on the card's front face as a live preview. See the EDD's frontend implementation notes for the material breakdown (reflective frame material vs. the less-metallic, texture-mapped front-face material).
 
 ### Background
 
-Full-page dot field (Three.js particle system). Landing/loading animation: dots fade in and out of sync with each other (each particle on its own opacity cycle with a randomized phase offset), not a uniform fade.
+Full-page dot field (Three.js particle system). Landing/loading animation: dots fade in and out of sync with each other (each particle on its own opacity cycle with a randomized phase offset), not a uniform fade. Also reacts to the cursor: dots within a small radius spring away from the pointer and ease back to their home position once it moves off.
 
-### Node / shard asset
+### Node / card asset
 
-One shared shard geometry, reused across every project card — not a unique model per project. Rendered live in Three.js (not pre-rendered video/image), each card's instance running its own independent rotation loop (distinct phase, speed, and axis per instance) so the up-to-6 cards never read as copies of one synced asset.
+One shared rounded-box card geometry, reused across every project card — not a unique model per project. Rendered live in Three.js (not pre-rendered video/image). Each card's instance has its own fixed resting tilt and idle-sway phase/speed so the up-to-6 cards never read as copies of one synced asset. Motion is a bounded, gentle sway around that resting tilt — not a continuous tumble — so the card is always legible and reads as floating in place rather than spinning. Hovering and dragging (in any direction) imparts a small extra twirl impulse on top of the idle sway; the impulse decays quickly and the card eases back to its resting, camera-facing tilt rather than drifting or freezing at an odd angle.
 
 ### AI Workflow section copy (locked)
 
@@ -188,11 +188,11 @@ One shared shard geometry, reused across every project card — not a unique mod
 
 ### Expand mechanism — full detail
 
-- **Trigger:** desktop — hover over a shard, then scroll, drives that specific shard's expand progress from 0% to 100%. Scroll only affects the hovered shard; the page itself doesn't move while a shard is being hovered. Mobile — no hover exists, so this becomes tap-to-expand in one step instead of a progressive hover+scroll zoom.
-- **Universal fallback:** click/tap always works to expand a shard, on any device, regardless of gesture or browser support.
-- **Independence:** each shard's expand state is self-contained. If the cursor moves directly from shard A to shard B mid-expand, A independently starts its slow snap-back while B independently starts its own expand from collapsed — they never interact with each other.
-- **Cursor drift:** if the cursor drifts off a shard mid-expand, it slowly snaps back to collapsed rather than freezing in place or resetting instantly.
-- **Overflow behavior:** once a shard reaches 100% expanded, continued forward scroll (while still hovering) scrolls the writeup content *inside* the expanded card rather than doing nothing. Scrolling backward from the top of that inner content is what resumes the collapse animation.
+- **Trigger:** desktop — hover over a card, then scroll, drives that specific card's expand progress from 0% to 100%. Scroll only affects the hovered card; the page itself doesn't move while a card is being hovered. Mobile — no hover exists, so this becomes tap-to-expand in one step instead of a progressive hover+scroll zoom.
+- **Universal fallback:** click/tap always works to expand a card, on any device, regardless of gesture or browser support.
+- **Independence:** each card's expand state is self-contained. If the cursor moves directly from card A to card B mid-expand, A independently starts its slow snap-back while B independently starts its own expand from collapsed — they never interact with each other.
+- **Cursor drift:** if the cursor drifts off a card mid-expand, it slowly snaps back to collapsed rather than freezing in place or resetting instantly.
+- **Overflow behavior:** once a card reaches 100% expanded, continued forward scroll (while still hovering) scrolls the writeup content *inside* the expanded card rather than doing nothing. Scrolling backward from the top of that inner content is what resumes the collapse animation.
 - **Expanded sizing:** fills most of the viewport but leaves a margin — not full-bleed. The dot-field background stays visible around the edges even at full expansion, so the card still reads as floating in the scene rather than becoming a fullscreen modal.
 
 ### Contact placement
