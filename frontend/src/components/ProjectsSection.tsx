@@ -10,8 +10,14 @@ interface ProjectsSectionProps {
 }
 
 export default function ProjectsSection({ projects }: ProjectsSectionProps) {
-  const { progress, setHoveredIndex, handleWheel, toggleExpand, registerInnerScroll } =
-    useCardExpand(projects.length);
+  const {
+    progress,
+    setHoveredIndex,
+    setInteractiveIndex,
+    handleWheel,
+    toggleExpand,
+    registerInnerScroll,
+  } = useCardExpand(projects.length);
 
   const [viewport, setViewport] = useState(() => ({
     width: window.innerWidth,
@@ -98,6 +104,18 @@ export default function ProjectsSection({ projects }: ProjectsSectionProps) {
                 mediaRefs.current[i] = el;
               }}
               mediaTransform={mediaTransform}
+              // Every card's panel sits at the same absolute screen rect,
+              // stacked by DOM order — only differing by opacity. Without
+              // this, a collapsed-but-still-mounted card's own interactive
+              // region (invisible, opacity 0) can sit on top of the
+              // actually-visible expanded card's and silently steal its
+              // hover/clicks.
+              interactive={t > 0.05}
+              onInteractiveEnter={() => {
+                setHoveredIndex(i);
+                setInteractiveIndex(i);
+              }}
+              onInteractiveLeave={() => setInteractiveIndex(null)}
             />
           </div>
         );

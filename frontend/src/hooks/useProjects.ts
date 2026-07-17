@@ -7,12 +7,17 @@ export function useProjects() {
 
   useEffect(() => {
     let cancelled = false;
-    getProjects().then((data) => {
-      if (!cancelled) {
-        setProjects(data);
-        setIsLoading(false);
-      }
-    });
+    getProjects()
+      .then((data) => {
+        if (!cancelled) {
+          setProjects(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        if (!cancelled) setIsLoading(false);
+      });
     return () => {
       cancelled = true;
     };

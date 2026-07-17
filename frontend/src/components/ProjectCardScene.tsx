@@ -157,6 +157,45 @@ function youtubeThumbnailUrl(embedUrl: string): string | null {
   return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
 }
 
+const FACE_TEXTURE_RESOLUTION = 1024;
+
+// Source images rarely match the card's own aspect ratio. Cropping
+// (cover) cuts off content, plain letterboxing (contain) leaves dead
+// bars. Composite instead: a blurred, cover-fit copy of the same image
+// fills the frame, with a sharp, uncropped contain-fit copy centered
+// on top — no cropping, no stretching, no empty space.
+function compositeContainWithBlurFill(
+  image: HTMLImageElement,
+  aspect: number,
+): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = FACE_TEXTURE_RESOLUTION;
+  canvas.height = Math.round(FACE_TEXTURE_RESOLUTION / aspect);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+
+  const cw = canvas.width;
+  const ch = canvas.height;
+  const iw = image.naturalWidth || image.width;
+  const ih = image.naturalHeight || image.height;
+
+  const coverScale = Math.max(cw / iw, ch / ih);
+  const coverW = iw * coverScale;
+  const coverH = ih * coverScale;
+  ctx.filter = "blur(28px)";
+  ctx.globalAlpha = 0.55;
+  ctx.drawImage(image, (cw - coverW) / 2, (ch - coverH) / 2, coverW, coverH);
+  ctx.filter = "none";
+  ctx.globalAlpha = 1;
+
+  const containScale = Math.min(cw / iw, ch / ih);
+  const containW = iw * containScale;
+  const containH = ih * containScale;
+  ctx.drawImage(image, (cw - containW) / 2, (ch - containH) / 2, containW, containH);
+
+  return canvas;
+}
+
 // Loads whatever the project's own demo media is onto the card face —
 // an image texture for image projects and YouTube (via its thumbnail),
 // a live-playing video texture for self-hosted video.
@@ -168,7 +207,7 @@ function loadFaceTexture(
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.onload = () => {
-      texture.image = image;
+      texture.image = compositeContainWithBlurFill(image, CARD_WIDTH / CARD_HEIGHT);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.needsUpdate = true;
       material.color.set(0xffffff);

@@ -61,6 +61,8 @@ class AboutContent(CamelModel):
     body: str
     linkedin_url: str
     devpost_url: str
+    # Optional: rows written before this field existed still validate.
+    github_url: str | None = None
 
 
 class AiWorkflowBlock(CamelModel):

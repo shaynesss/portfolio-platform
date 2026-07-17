@@ -13,7 +13,7 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 **Who it's for:** Fintech and AI-agent recruiters/hiring managers evaluating Shayne for grad-scheme and internship roles, landing via CV link or direct share.
 
 **Success criteria:**
-- A recruiter can land on the page, understand who Shayne is and how he works with AI, explore both projects in depth (including live GitHub stats), and reach LinkedIn/Devpost — all without leaving the page or hitting a dead end.
+- A recruiter can land on the page, understand who Shayne is and how he works with AI, explore both projects in depth (including live GitHub stats), and reach LinkedIn, Devpost, and GitHub — all without leaving the page or hitting a dead end.
 - The experience feels distinctly personal, not a templated portfolio — the scroll/hover interaction is a deliberate part of that, not decoration.
 - The two hackathon projects read as genuine proof of shipped, working software (via linked, verifiable GitHub repos), not just claims.
 - Site is live at a real URL, not just running locally, before it goes on the CV.
@@ -24,7 +24,7 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 
 ### Core features (must-haves)
 
-- **About section** (top of page), with LinkedIn + Devpost links at the bottom of it.
+- **About section** (top of page), with LinkedIn, Devpost, and GitHub links at the bottom of it.
 - **"Personal AI Workflow: Noctis" section** — locked copy, see Design Brief section 4 below.
 - **Projects section** — schema supports up to 6 slots; 2 populated at launch.
 - **Each project has two states:**
@@ -48,7 +48,7 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 
 ### User flow
 
-Landing (dot-field background fades in, dots out of sync with each other) → About section (LinkedIn + Devpost at the bottom) → AI Workflow section → Projects section, reflective cards floating/swaying independently → hover + scroll a card to expand it in place; if the writeup is long, continued scroll once fully expanded scrolls the content internally rather than continuing to expand → scroll back (or move cursor off, which triggers a slow snap-back) to collapse → repeat for the next card. The whole portfolio is the shareable unit — no per-project deep link, no route changes anywhere on the page.
+Landing (dot-field background fades in, dots out of sync with each other) → About section (LinkedIn, Devpost, and GitHub links at the bottom) → AI Workflow section → Projects section, reflective cards floating/swaying independently → hover + scroll a card to expand it in place; if the writeup is long, continued scroll once fully expanded scrolls the content internally rather than continuing to expand → scroll back (or move cursor off, which triggers a slow snap-back) to collapse → repeat for the next card. The whole portfolio is the shareable unit — no per-project deep link, no route changes anywhere on the page.
 
 ---
 
@@ -78,7 +78,7 @@ Shared FastAPI + PostgreSQL backend (Railway), serving two clients:
 - `created_at`, `updated_at`
 
 `pages`:
-- Singleton content blocks — About section body, LinkedIn/Devpost URLs, AI Workflow section body (locked copy below).
+- Singleton content blocks — About section body, LinkedIn/Devpost/GitHub URLs, AI Workflow section body (locked copy below).
 
 ### External dependencies
 
@@ -197,7 +197,7 @@ One shared rounded-box card geometry, reused across every project card — not a
 
 ### Contact placement
 
-LinkedIn + Devpost links live at the bottom of the About section — not a separate footer or contact block.
+LinkedIn, Devpost, and GitHub links live at the bottom of the About section — not a separate footer or contact block.
 
 ### Component evaluation notes
 

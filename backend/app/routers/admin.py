@@ -1,6 +1,8 @@
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -16,10 +18,12 @@ from app.schemas import (
     ProjectUpdate,
 )
 from app.services.github import GithubFetchError, fetch_repo_stats
+from app.services.uploads import UploadRejected, save_upload
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
 MAX_PROJECTS = 6
+UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", "uploads"))
 
 
 def _get_project_or_404(db: Session, project_id: int) -> Project:
@@ -27,6 +31,17 @@ def _get_project_or_404(db: Session, project_id: int) -> Project:
     if project is None:
         raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
     return project
+
+
+@router.post("/upload")
+async def upload_media(file: UploadFile = File(...)):
+    try:
+        filename = await save_upload(file, UPLOAD_DIR)
+    except UploadRejected as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    public_base_url = os.environ["PUBLIC_BASE_URL"].rstrip("/")
+    return {"url": f"{public_base_url}/uploads/{filename}"}
 
 
 @router.post("/projects", response_model=ProjectOut, status_code=201)

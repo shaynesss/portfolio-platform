@@ -41,9 +41,8 @@ class PageEditScreen(ModalScreen[bool]):
         align: center middle;
     }
     #panel {
-        width: 90;
-        height: auto;
-        max-height: 90%;
+        width: 95%;
+        height: 95%;
         border: round $accent;
         padding: 1 2;
         background: $surface;
@@ -52,10 +51,10 @@ class PageEditScreen(ModalScreen[bool]):
         margin-top: 1;
     }
     #panel TextArea {
-        height: 10;
+        height: 12;
     }
     #blocks {
-        height: 20;
+        height: 24;
     }
     #error {
         color: $error;
@@ -74,6 +73,13 @@ class PageEditScreen(ModalScreen[bool]):
         self.page_key = page_key
         self.content = content
 
+    def on_mount(self) -> None:
+        # Without this, focus lands on the VerticalScroll container
+        # itself and typing does nothing until you manually Tab or
+        # click into a field.
+        first_field = "body" if self.page_key == "about" else "ai-title"
+        self.set_focus(self.query_one(f"#{first_field}"))
+
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="panel"):
             if self.page_key == "about":
@@ -84,6 +90,8 @@ class PageEditScreen(ModalScreen[bool]):
                 yield Input(value=self.content.get("linkedinUrl", ""), id="linkedin-url")
                 yield Label("Devpost URL")
                 yield Input(value=self.content.get("devpostUrl", ""), id="devpost-url")
+                yield Label("GitHub URL")
+                yield Input(value=self.content.get("githubUrl") or "", id="github-url")
             else:
                 yield Static("Edit AI Workflow", id="heading")
                 yield Label("Title")
@@ -116,10 +124,16 @@ class PageEditScreen(ModalScreen[bool]):
             body = self.query_one("#body", TextArea).text.strip()
             linkedin_url = self.query_one("#linkedin-url", Input).value.strip()
             devpost_url = self.query_one("#devpost-url", Input).value.strip()
-            if not all([body, linkedin_url, devpost_url]):
+            github_url = self.query_one("#github-url", Input).value.strip()
+            if not all([body, linkedin_url, devpost_url, github_url]):
                 error.update("All fields are required.")
                 return
-            payload = {"body": body, "linkedinUrl": linkedin_url, "devpostUrl": devpost_url}
+            payload = {
+                "body": body,
+                "linkedinUrl": linkedin_url,
+                "devpostUrl": devpost_url,
+                "githubUrl": github_url,
+            }
         else:
             title = self.query_one("#ai-title", Input).value.strip()
             intro = self.query_one("#intro", TextArea).text.strip()

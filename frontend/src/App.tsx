@@ -18,8 +18,8 @@ function App() {
   const [aiWorkflow, setAiWorkflow] = useState<AiWorkflowContent | null>(null);
 
   useEffect(() => {
-    getAboutContent().then(setAbout);
-    getAiWorkflowContent().then(setAiWorkflow);
+    getAboutContent().then(setAbout).catch(console.error);
+    getAiWorkflowContent().then(setAiWorkflow).catch(console.error);
   }, []);
 
   return (

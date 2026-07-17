@@ -20,6 +20,15 @@ export function useCardExpand(count: number) {
   const progressRef = useRef(progress);
   progressRef.current = progress;
   const hoveredRef = useRef<number | null>(null);
+  // Separate from hoveredRef on purpose. The 3D card's canvas and the
+  // expanded panel's interactive elements (e.g. the GitHub stat link)
+  // are different DOM subtrees fighting over the same screen region —
+  // moving onto the link fires the canvas's native pointerleave and
+  // this overlay's pointerenter as part of the same browser event
+  // sequence, but their relative order isn't guaranteed. Two
+  // independent flags OR'd together in the decay check means whichever
+  // fires last can't stomp the other's claim.
+  const interactiveRef = useRef<number | null>(null);
   const innerScrollRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   // Index -> target progress (0 or 1) for an in-flight click/tap
   // animation. Takes priority over the hover-based snap-back below so
@@ -52,7 +61,7 @@ export function useCardExpand(count: number) {
             if (nextP !== p) changed = true;
             return nextP;
           }
-          if (i !== hoveredRef.current && p > 0) {
+          if (i !== hoveredRef.current && i !== interactiveRef.current && p > 0) {
             changed = true;
             return Math.max(0, p - SNAP_BACK_SPEED * dt);
           }
@@ -69,6 +78,10 @@ export function useCardExpand(count: number) {
   const setHoveredIndex = useCallback((index: number | null) => {
     hoveredRef.current = index;
     setHoveredIndexState(index);
+  }, []);
+
+  const setInteractiveIndex = useCallback((index: number | null) => {
+    interactiveRef.current = index;
   }, []);
 
   // Returns true if the caller should preventDefault (we consumed the
@@ -121,6 +134,7 @@ export function useCardExpand(count: number) {
     progress,
     hoveredIndex,
     setHoveredIndex,
+    setInteractiveIndex,
     handleWheel,
     toggleExpand,
     registerInnerScroll,

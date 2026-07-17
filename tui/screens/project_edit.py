@@ -13,14 +13,18 @@ VIDEO_SOURCE_OPTIONS = [("youtube", "youtube"), ("self_hosted", "self_hosted")]
 class ProjectEditScreen(ModalScreen[bool]):
     """Add or edit a single project. Dismisses with True if saved."""
 
+    # Without this, focus lands on the VerticalScroll container itself
+    # when the screen opens — typing does nothing until you manually
+    # Tab or click into a field, which reads as "the form is broken".
+    AUTO_FOCUS = "#slug"
+
     CSS = """
     ProjectEditScreen {
         align: center middle;
     }
     #panel {
-        width: 70;
-        height: auto;
-        max-height: 90%;
+        width: 95%;
+        height: 95%;
         border: round $accent;
         padding: 1 2;
         background: $surface;
@@ -28,9 +32,18 @@ class ProjectEditScreen(ModalScreen[bool]):
     #panel Label {
         margin-top: 1;
     }
+    #writeup {
+        height: 10;
+    }
     #error {
         color: $error;
         margin-top: 1;
+    }
+    #upload-row {
+        height: auto;
+    }
+    #upload-row Input {
+        width: 1fr;
     }
     #buttons {
         margin-top: 1;
@@ -72,6 +85,14 @@ class ProjectEditScreen(ModalScreen[bool]):
             yield Label("Demo media URL")
             yield Input(value=p.get("demoMediaUrl", ""), id="demo-media-url")
 
+            yield Label(
+                "...or upload a local file instead (drag it into the terminal "
+                "to paste its path, then click Upload)"
+            )
+            with Horizontal(id="upload-row"):
+                yield Input(placeholder="/path/to/file.png", id="local-file-path")
+                yield Button("Upload", id="upload-file")
+
             yield Label("Video source (only used when media type is video)")
             yield Select(
                 VIDEO_SOURCE_OPTIONS,
@@ -88,6 +109,35 @@ class ProjectEditScreen(ModalScreen[bool]):
     @on(Button.Pressed, "#cancel")
     def cancel(self) -> None:
         self.dismiss(False)
+
+    @on(Button.Pressed, "#upload-file")
+    async def upload(self) -> None:
+        error = self.query_one("#error", Static)
+        path_input = self.query_one("#local-file-path", Input)
+        file_path = path_input.value.strip()
+        if not file_path:
+            error.update("Enter a local file path to upload first.")
+            return
+
+        error.update("Uploading...")
+        try:
+            url = await self.client.upload_media(file_path)
+        except ApiError as exc:
+            error.update(f"Upload failed: {exc.detail}")
+            # Clear + refocus even on failure: leftover text here is
+            # the single biggest cause of "drag-and-drop worked once
+            # then stopped" — dragging a new file in appends to
+            # whatever's already there instead of replacing it, since
+            # the terminal is just typing the path as keystrokes at
+            # the cursor. Same for the success path below.
+            path_input.value = ""
+            path_input.focus()
+            return
+
+        self.query_one("#demo-media-url", Input).value = url
+        path_input.value = ""
+        path_input.focus()
+        error.update(f"Uploaded — demo media URL set to {url}")
 
     @on(Button.Pressed, "#save")
     async def save(self) -> None:

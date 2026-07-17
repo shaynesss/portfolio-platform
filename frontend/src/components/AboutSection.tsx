@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { AboutContent } from "@/lib/api";
 import { LANDING_SEQUENCE_MS } from "@/components/DotBackground";
+import { withScheme } from "@/lib/url";
 
 const TEXT_FADE_MS = 1600;
 // Starts noticeably before the particle field is fully done staging in
@@ -57,7 +58,7 @@ export default function AboutSection({ content }: AboutSectionProps) {
       </p>
       <div className="mt-10 flex gap-6 text-sm font-medium text-zinc-300">
         <a
-          href={content.linkedinUrl}
+          href={withScheme(content.linkedinUrl)}
           target="_blank"
           rel="noreferrer"
           className="transition-colors hover:text-white"
@@ -65,13 +66,23 @@ export default function AboutSection({ content }: AboutSectionProps) {
           LinkedIn
         </a>
         <a
-          href={content.devpostUrl}
+          href={withScheme(content.devpostUrl)}
           target="_blank"
           rel="noreferrer"
           className="transition-colors hover:text-white"
         >
           Devpost
         </a>
+        {content.githubUrl && (
+          <a
+            href={withScheme(content.githubUrl)}
+            target="_blank"
+            rel="noreferrer"
+            className="transition-colors hover:text-white"
+          >
+            GitHub
+          </a>
+        )}
       </div>
     </section>
   );

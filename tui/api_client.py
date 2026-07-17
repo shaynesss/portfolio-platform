@@ -1,4 +1,6 @@
 import os
+import shlex
+from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
@@ -68,3 +70,17 @@ class ApiClient:
     async def update_page(self, key: str, payload: dict) -> dict:
         """key is the URL form: 'about' or 'ai-workflow'."""
         return await self._request("PUT", f"/admin/pages/{key}", json=payload)
+
+    async def upload_media(self, file_path: str) -> str:
+        # Dragging a file into the terminal pastes a shell-quoted path
+        # (backslash-escaped spaces, or wrapped in quotes) — not a raw
+        # path. Parse it the same way a shell would before treating it
+        # as one, or paths with spaces silently fail to resolve.
+        tokens = shlex.split(file_path)
+        raw_path = tokens[0] if tokens else file_path
+        path = Path(raw_path).expanduser()
+        if not path.is_file():
+            raise ApiError(400, f"File not found: {path}")
+        with path.open("rb") as f:
+            result = await self._request("POST", "/admin/upload", files={"file": (path.name, f)})
+        return result["url"]

@@ -14,7 +14,7 @@ MAX_PROJECTS = 6
 class ProjectListScreen(Screen):
     BINDINGS = [
         Binding("n", "add_project", "Add project"),
-        Binding("enter", "edit_project", "Edit"),
+        Binding("e", "edit_project", "Edit"),
         Binding("d", "delete_project", "Delete"),
         Binding("g", "refresh_github", "Refresh GitHub"),
         Binding("[", "move_up", "Move up"),
@@ -36,6 +36,16 @@ class ProjectListScreen(Screen):
         table.cursor_type = "row"
         table.add_columns("Order", "Title", "Slug", "Stars", "Language", "Media")
         await self.refresh_projects()
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        # DataTable owns the "enter" key itself (its built-in
+        # select_cursor action, which posts this message) — a Binding
+        # on this screen for the same key would never fire, since
+        # Textual dispatches a key to whichever widget declares it and
+        # DataTable claims "enter" first. Hooking this message instead
+        # keeps Enter working as the intuitive way to edit a row; "e"
+        # (below) is the discoverable, footer-visible equivalent.
+        self.action_edit_project()
 
     async def refresh_projects(self) -> None:
         table = self.query_one(DataTable)
@@ -145,3 +155,10 @@ class ProjectListScreen(Screen):
             self.notify(f"Failed to load AI Workflow: {exc.detail}", severity="error")
             return
         self.app.push_screen(PageEditScreen(self.app.client, "ai-workflow", content))
+
+    async def action_quit(self) -> None:
+        # Textual dispatches a key binding's action to whichever widget
+        # declares it (this screen), not by searching up the class
+        # hierarchy for whoever implements it — so this can't be left
+        # off and rely on bubbling to App.action_quit.
+        await self.app.action_quit()
