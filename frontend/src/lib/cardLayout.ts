@@ -18,6 +18,16 @@ export function cardBaseX(index: number, count: number): number {
   return index * CARD_SPACING - totalWidth / 2;
 }
 
+// Full visual span of the row, edge to edge — the gap between the
+// outermost card centers plus each of their own half-widths sticking
+// out past that. computeCameraZ needs this, not just the center-to-
+// center spacing, or the outer cards' edges fall outside the frustum
+// on narrow/portrait aspects (masked on wide ones by MIN_CAMERA_Z).
+export function rowSpan(count: number): number {
+  if (count <= 0) return 0;
+  return (count - 1) * CARD_SPACING + CARD_WIDTH;
+}
+
 // Zooms the camera out as more cards are added so a row of up to 6
 // always fits the frame, instead of overflowing off-screen.
 export function computeCameraZ(totalWidth: number, aspect: number): number {
@@ -70,9 +80,8 @@ export function expandTargetScale(
   viewportWidth: number,
   viewportHeight: number,
 ): number {
-  const totalWidth = (count - 1) * CARD_SPACING;
   const aspect = viewportWidth / viewportHeight;
-  const restCamZ = computeCameraZ(totalWidth, aspect);
+  const restCamZ = computeCameraZ(rowSpan(count), aspect);
   const camZ = restCamZ - EXPAND_FORWARD_CREEP;
   const halfFovRad = (CAMERA_FOV_DEG * Math.PI) / 360;
   const scale = viewportHeight / (2 * camZ * Math.tan(halfFovRad));
@@ -125,9 +134,8 @@ export function cardRestScreenRect(
   viewportWidth: number,
   viewportHeight: number,
 ): ScreenRect {
-  const totalWidth = (count - 1) * CARD_SPACING;
   const aspect = viewportWidth / viewportHeight;
-  const camZ = computeCameraZ(totalWidth, aspect);
+  const camZ = computeCameraZ(rowSpan(count), aspect);
   const halfFovRad = (CAMERA_FOV_DEG * Math.PI) / 360;
   // World-unit-to-pixel scale at the card's depth (z = 0, camera at
   // camZ) — the same factor applies to both axes for an isotropic
@@ -159,9 +167,8 @@ export function cardExpandedScreenRect(
   progress: number,
 ): ScreenRect {
   const dive = expandDive(progress);
-  const totalWidth = (count - 1) * CARD_SPACING;
   const aspect = viewportWidth / viewportHeight;
-  const restCamZ = computeCameraZ(totalWidth, aspect);
+  const restCamZ = computeCameraZ(rowSpan(count), aspect);
   const camZ = restCamZ - dive * EXPAND_FORWARD_CREEP;
   const halfFovRad = (CAMERA_FOV_DEG * Math.PI) / 360;
   const scale = viewportHeight / (2 * camZ * Math.tan(halfFovRad));

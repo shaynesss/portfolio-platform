@@ -5,11 +5,11 @@ import type { Project } from "@/lib/api";
 import {
   CARD_WIDTH,
   CARD_HEIGHT,
-  CARD_SPACING,
   CAMERA_FOV_DEG,
   EXPAND_FORWARD_CREEP,
   cardBaseX,
   computeCameraZ,
+  rowSpan,
   expandDive,
   expandGrowthT,
   expandTargetScale,
@@ -309,7 +309,7 @@ export default function ProjectCardScene({
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    const totalRowWidth = (projects.length - 1) * CARD_SPACING;
+    const totalRowWidth = rowSpan(projects.length);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
