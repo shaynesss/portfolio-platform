@@ -27,6 +27,13 @@ interface ProjectCardProps {
   // guaranteed.
   onInteractiveEnter?: () => void;
   onInteractiveLeave?: () => void;
+  // Touch only. Desktop's collapse-on-tap-elsewhere comes for free from
+  // the canvas underneath (this panel stays pointer-events-none there,
+  // so clicks pass straight through to its raycast hit-test) — but on
+  // touch the writeup region is deliberately made pointer-events-auto
+  // so it can be scrolled natively, which also means it now blocks
+  // taps from ever reaching the canvas. This replaces that lost path.
+  onPanelTap?: () => void;
 }
 
 export default function ProjectCard({
@@ -37,6 +44,7 @@ export default function ProjectCard({
   interactive,
   onInteractiveEnter,
   onInteractiveLeave,
+  onPanelTap,
 }: ProjectCardProps) {
   return (
     <article className="relative flex h-full w-full flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950">
@@ -67,6 +75,7 @@ export default function ProjectCard({
         // wheel path, so it needs real hit-testing to scroll natively —
         // only ever turned on for the currently visible, interactive card.
         style={isTouchDevice && interactive ? { pointerEvents: "auto" } : undefined}
+        onClick={isTouchDevice ? onPanelTap : undefined}
       >
         {/* mx-auto + max-w-xl centers this column as a block within the
             panel; items-start + text-left then left-aligns everything
@@ -104,6 +113,7 @@ export default function ProjectCard({
             className={`mt-6 ${interactive ? "pointer-events-auto" : "pointer-events-none"}`}
             onPointerEnter={onInteractiveEnter}
             onPointerLeave={onInteractiveLeave}
+            onClick={(e) => e.stopPropagation()}
           >
             <GithubStatCard
               url={project.githubUrl}

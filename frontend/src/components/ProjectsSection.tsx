@@ -116,6 +116,7 @@ export default function ProjectsSection({ projects }: ProjectsSectionProps) {
                 setInteractiveIndex(i);
               }}
               onInteractiveLeave={() => setInteractiveIndex(null)}
+              onPanelTap={() => toggleExpand(i)}
             />
           </div>
         );

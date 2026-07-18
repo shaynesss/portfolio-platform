@@ -163,21 +163,21 @@ export default function ScrollScenes({
     if (!container) return;
 
     const SWIPE_THRESHOLD_PX = 40;
-    // A real finger never holds perfectly still — an intended tap still
-    // produces a touchmove or two with a couple of px of jitter. Calling
-    // preventDefault on those breaks the browser's synthesized click on
-    // real devices (this didn't show up in synthetic/automated testing,
-    // where a scripted tap fires zero touchmove events at all). Only
-    // take over the gesture — and only then call preventDefault — once
-    // movement actually crosses this "this is a swipe, not a tap"
-    // threshold, so a genuine tap is never touched.
-    const MOVE_COMMIT_PX = 10;
+    // A gesture ending with less than this much total movement counts as
+    // a tap, not a drag — dispatched as a manual click below rather than
+    // relying on the browser's own tap-to-click synthesis, which turned
+    // out not to survive preventDefault reliably on real devices (a real
+    // finger never holds perfectly still, so an intended tap routinely
+    // produces enough incidental touchmove movement to have triggered
+    // that suppression). Movement between this and SWIPE_THRESHOLD_PX is
+    // deliberately ambiguous and does nothing — neither a clean tap nor
+    // a clean swipe.
+    const TAP_MAX_PX = 15;
     let startY = 0;
     let startX = 0;
     let startSection = 0;
     let insideScrollRegion = false;
     let tracking = false;
-    let committedToSwipe = false;
 
     const currentSection = (): number => {
       const rect = container.getBoundingClientRect();
@@ -210,19 +210,14 @@ export default function ScrollScenes({
         "[data-scroll-region]",
       );
       tracking = true;
-      committedToSwipe = false;
     };
 
     const onTouchMove = (event: TouchEvent) => {
       if (!tracking || insideScrollRegion) return;
-      if (!committedToSwipe) {
-        const touch = event.touches[0];
-        if (!touch) return;
-        const dx = touch.clientX - startX;
-        const dy = touch.clientY - startY;
-        if (Math.hypot(dx, dy) < MOVE_COMMIT_PX) return;
-        committedToSwipe = true;
-      }
+      // Always suppressed once we've taken custody of this gesture — the
+      // tap/swipe outcome is decided and dispatched ourselves at
+      // touchend below, so nothing here depends on native scroll or
+      // native click synthesis surviving this.
       event.preventDefault();
     };
 
@@ -230,12 +225,32 @@ export default function ScrollScenes({
       if (!tracking) return;
       tracking = false;
       if (insideScrollRegion) return;
+      // Also suppress here so a native click can never double-fire
+      // alongside the manual dispatch below for a tap.
+      event.preventDefault();
       const touch = event.changedTouches[0];
       if (!touch) return;
       const dy = startY - touch.clientY;
       const dx = startX - touch.clientX;
-      if (Math.abs(dy) < SWIPE_THRESHOLD_PX || Math.abs(dy) < Math.abs(dx)) return;
-      goToSection(startSection + (dy > 0 ? 1 : -1));
+      const distance = Math.hypot(dx, dy);
+
+      if (distance >= SWIPE_THRESHOLD_PX && Math.abs(dy) >= Math.abs(dx)) {
+        goToSection(startSection + (dy > 0 ? 1 : -1));
+        return;
+      }
+
+      if (distance <= TAP_MAX_PX) {
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        target?.dispatchEvent(
+          new MouseEvent("click", {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+          }),
+        );
+      }
     };
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
