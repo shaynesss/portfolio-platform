@@ -163,11 +163,21 @@ export default function ScrollScenes({
     if (!container) return;
 
     const SWIPE_THRESHOLD_PX = 40;
+    // A real finger never holds perfectly still — an intended tap still
+    // produces a touchmove or two with a couple of px of jitter. Calling
+    // preventDefault on those breaks the browser's synthesized click on
+    // real devices (this didn't show up in synthetic/automated testing,
+    // where a scripted tap fires zero touchmove events at all). Only
+    // take over the gesture — and only then call preventDefault — once
+    // movement actually crosses this "this is a swipe, not a tap"
+    // threshold, so a genuine tap is never touched.
+    const MOVE_COMMIT_PX = 10;
     let startY = 0;
     let startX = 0;
     let startSection = 0;
     let insideScrollRegion = false;
     let tracking = false;
+    let committedToSwipe = false;
 
     const currentSection = (): number => {
       const rect = container.getBoundingClientRect();
@@ -200,10 +210,19 @@ export default function ScrollScenes({
         "[data-scroll-region]",
       );
       tracking = true;
+      committedToSwipe = false;
     };
 
     const onTouchMove = (event: TouchEvent) => {
       if (!tracking || insideScrollRegion) return;
+      if (!committedToSwipe) {
+        const touch = event.touches[0];
+        if (!touch) return;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        if (Math.hypot(dx, dy) < MOVE_COMMIT_PX) return;
+        committedToSwipe = true;
+      }
       event.preventDefault();
     };
 
