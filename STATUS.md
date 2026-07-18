@@ -13,9 +13,10 @@
 - TUI: points at production (`tui/.env`) — this is now the live write path for real edits.
 
 **Known gaps:**
-- Uploaded files on Railway are **not yet on a persistent Volume** — `railway volume add` hit a reproducible CLI crash (`volume.rs:836`, `Option::unwrap()` on `None`) across multiple attempts; worth retrying via the Railway dashboard or filing with Railway support. Until fixed, a Railway redeploy would wipe `/data/uploads` and any project images would need re-uploading through the TUI.
 - No formal automated test suite (backend/frontend/TUI were all verified through real end-to-end interaction — headless Textual `run_test()`, Playwright against the live site, real API calls — not unit tests).
 - `prefers-reduced-motion` is implemented on the dot field and card scene; not re-verified against the live production build specifically (was verified pre-deploy).
 - TUI `pipx` packaging still punted, per the locked spec.
 
-**Next up:** attach the Railway Volume for upload persistence (dashboard, once the CLI bug is worked around), then this is fully shippable.
+**Resolved 2026-07-18:** Railway Volume for upload persistence is attached (`/data/uploads`, via the dashboard — `railway volume add` still crashes on the CLI, unresolved upstream). Verified by forcing a real redeploy and confirming both project images survived it.
+
+This is fully shippable.
