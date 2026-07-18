@@ -1,6 +1,7 @@
 import type { Project } from "@/lib/api";
 import DemoMedia from "@/components/DemoMedia";
 import GithubStatCard from "@/components/GithubStatCard";
+import { isTouchDevice } from "@/lib/isTouchDevice";
 
 interface ProjectCardProps {
   project: Project;
@@ -54,7 +55,19 @@ export default function ProjectCard({
         />
       )}
       <div className="pointer-events-none absolute inset-0 bg-zinc-950/70" />
-      <div ref={innerScrollRef} className="relative flex-1 overflow-y-auto p-8">
+      <div
+        ref={innerScrollRef}
+        data-scroll-region
+        className="relative flex-1 overflow-y-auto overscroll-contain p-8"
+        // The panel is pointer-events-none by default (see the interactive
+        // prop comment below) so a collapsed-but-mounted card's writeup
+        // never shadows the visible one. Desktop scrolls this region via
+        // the wheel-hijack in useCardExpand's handleWheel regardless of
+        // pointer-events, so it stays untouched; touch has no equivalent
+        // wheel path, so it needs real hit-testing to scroll natively —
+        // only ever turned on for the currently visible, interactive card.
+        style={isTouchDevice && interactive ? { pointerEvents: "auto" } : undefined}
+      >
         {/* mx-auto + max-w-xl centers this column as a block within the
             panel; items-start + text-left then left-aligns everything
             inside it — long writeups read far better left-aligned than

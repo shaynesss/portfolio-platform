@@ -36,6 +36,12 @@ export function useCardExpand(count: number) {
   // it) still animates all the way to its target instead of being
   // immediately pulled back.
   const clickTargetsRef = useRef<Map<number, number>>(new Map());
+  // Index of the card a click/tap has explicitly toggled open, held
+  // regardless of hover state until it's toggled shut again. Without
+  // this, a touch device (no lingering "hover" once the finger lifts)
+  // would immediately start auto-collapsing the card right as its
+  // open animation finishes — same instant it becomes readable.
+  const pinnedRef = useRef<number | null>(null);
 
   // Per-frame loop: a card with an active click-triggered target eases
   // toward that target; otherwise, any card that isn't currently
@@ -61,7 +67,12 @@ export function useCardExpand(count: number) {
             if (nextP !== p) changed = true;
             return nextP;
           }
-          if (i !== hoveredRef.current && i !== interactiveRef.current && p > 0) {
+          if (
+            i !== hoveredRef.current &&
+            i !== interactiveRef.current &&
+            i !== pinnedRef.current &&
+            p > 0
+          ) {
             changed = true;
             return Math.max(0, p - SNAP_BACK_SPEED * dt);
           }
@@ -120,6 +131,11 @@ export function useCardExpand(count: number) {
     const current = progressRef.current[index] ?? 0;
     const next = current >= 0.98 ? 0 : 1;
     clickTargetsRef.current.set(index, next);
+    if (next === 1) {
+      pinnedRef.current = index;
+    } else if (pinnedRef.current === index) {
+      pinnedRef.current = null;
+    }
   }, []);
 
   const registerInnerScroll = useCallback(

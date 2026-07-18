@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
+import { isTouchDevice } from "@/lib/isTouchDevice";
 
 // How long to wait after the last scroll event before deciding the user
 // has settled and snapping the rest of the way into a section.
@@ -140,6 +141,93 @@ export default function ScrollScenes({
       window.clearTimeout(settleTimer);
     };
   }, [scenes.length, holdFraction, stride]);
+
+  // Touch-only: replace native inertial scrolling with one-swipe-per-
+  // section paging. A phone flick is far more sensitive than a mouse
+  // wheel tick and routinely blows straight through several sections in
+  // one gesture — the settle-snap above only cleans up afterward, it
+  // can't stop the overshoot itself. Taking the gesture over at the
+  // window level (rather than relying on native scroll physics) also
+  // fixes swiping back "up" out of the Projects section: its WebGL
+  // canvas sets `touch-action: none` so drag gestures on cards don't
+  // trigger the browser's own pan/zoom, but that leaves nothing to
+  // translate a touch swipe there into a page scroll — this handler
+  // doesn't depend on native scrolling happening at all, so it works
+  // the same whether the gesture starts over the canvas or anywhere
+  // else. Swipes that start inside a card's own scrollable writeup
+  // (`[data-scroll-region]`) are left alone so that still scrolls
+  // natively. Desktop is untouched — this effect no-ops there entirely.
+  useEffect(() => {
+    if (!isTouchDevice || scenes.length < 2) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const SWIPE_THRESHOLD_PX = 40;
+    let startY = 0;
+    let startX = 0;
+    let startSection = 0;
+    let insideScrollRegion = false;
+    let tracking = false;
+
+    const currentSection = (): number => {
+      const rect = container.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      if (scrollableDistance <= 0) return 0;
+      const raw = Math.min(1, Math.max(0, -rect.top / scrollableDistance));
+      return Math.min(scenes.length - 1, Math.max(0, Math.round(raw / stride)));
+    };
+
+    const goToSection = (index: number) => {
+      const clamped = Math.min(scenes.length - 1, Math.max(0, index));
+      const rect = container.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      if (scrollableDistance <= 0) return;
+      const target = clamped * stride + holdFraction / 2;
+      const targetScrollY = window.scrollY + rect.top + target * scrollableDistance;
+      window.scrollTo({
+        top: targetScrollY,
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      });
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      startY = touch.clientY;
+      startX = touch.clientX;
+      startSection = currentSection();
+      insideScrollRegion = !!(event.target as HTMLElement | null)?.closest?.(
+        "[data-scroll-region]",
+      );
+      tracking = true;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!tracking || insideScrollRegion) return;
+      event.preventDefault();
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      if (!tracking) return;
+      tracking = false;
+      if (insideScrollRegion) return;
+      const touch = event.changedTouches[0];
+      if (!touch) return;
+      const dy = startY - touch.clientY;
+      const dx = startX - touch.clientX;
+      if (Math.abs(dy) < SWIPE_THRESHOLD_PX || Math.abs(dy) < Math.abs(dx)) return;
+      goToSection(startSection + (dy > 0 ? 1 : -1));
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [scenes.length, holdFraction, stride, prefersReducedMotion]);
 
   return (
     <div
