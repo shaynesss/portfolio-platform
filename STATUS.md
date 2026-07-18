@@ -19,4 +19,6 @@
 
 **Resolved 2026-07-18:** Railway Volume for upload persistence is attached (`/data/uploads`, via the dashboard — `railway volume add` still crashes on the CLI, unresolved upstream). Verified by forcing a real redeploy and confirming both project images survived it.
 
+**Resolved 2026-07-18:** Mobile verified against production with Playwright's iPhone 13 emulation. Found and fixed a real bug — project cards overflowed off both edges of narrow/portrait viewports because `computeCameraZ` was fed only the center-to-center card spacing, not the full row span (each outer card's own half-width was missing). Desktop always hit the `MIN_CAMERA_Z` floor so this never surfaced there. Fixed in `frontend/src/lib/cardLayout.ts` (`rowSpan` helper) and redeployed; both cards now sit fully within frame on mobile. About-section fade-in was checked too and is not a bug — it just takes ~10s to complete, confirmed via `getComputedStyle` (opacity reaches 1, correct color/size) rather than assumed from an early screenshot. Mobile is in scope for v1 and now verified working.
+
 This is fully shippable.
