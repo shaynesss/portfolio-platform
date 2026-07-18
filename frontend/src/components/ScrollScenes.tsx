@@ -214,27 +214,38 @@ export default function ScrollScenes({
 
     const onTouchMove = (event: TouchEvent) => {
       if (!tracking || insideScrollRegion) return;
-      // Always suppressed once we've taken custody of this gesture — the
-      // tap/swipe outcome is decided and dispatched ourselves at
-      // touchend below, so nothing here depends on native scroll or
-      // native click synthesis surviving this.
+      // Suppressed outside a scroll region — the tap/swipe outcome is
+      // decided and dispatched ourselves at touchend below. Left alone
+      // inside a scroll region so its native touch-scroll keeps working;
+      // the click there is still resolved manually at touchend (see
+      // below), not left to native click synthesis either — that's what
+      // made tap-to-collapse flaky, since a tap inside a scrollable
+      // pointer-events:auto region doesn't reliably get a native click
+      // after it on real devices.
       event.preventDefault();
     };
 
     const onTouchEnd = (event: TouchEvent) => {
       if (!tracking) return;
       tracking = false;
-      if (insideScrollRegion) return;
-      // Also suppress here so a native click can never double-fire
-      // alongside the manual dispatch below for a tap.
-      event.preventDefault();
       const touch = event.changedTouches[0];
       if (!touch) return;
+      // Always suppress the native click here too — we resolve and
+      // dispatch it ourselves below, in every case, so nothing about
+      // this gesture is ever left to the browser's own tap-to-click
+      // heuristics. Harmless for a scroll region: this only affects the
+      // trailing synthesized click, not scrolling that already happened
+      // natively via touchmove above.
+      event.preventDefault();
       const dy = startY - touch.clientY;
       const dx = startX - touch.clientX;
       const distance = Math.hypot(dx, dy);
 
-      if (distance >= SWIPE_THRESHOLD_PX && Math.abs(dy) >= Math.abs(dx)) {
+      if (
+        !insideScrollRegion &&
+        distance >= SWIPE_THRESHOLD_PX &&
+        Math.abs(dy) >= Math.abs(dx)
+      ) {
         goToSection(startSection + (dy > 0 ? 1 : -1));
         return;
       }
@@ -255,7 +266,15 @@ export default function ScrollScenes({
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    // Not passive: onTouchEnd calls preventDefault to suppress the
+    // browser's native click, since every tap is dispatched manually
+    // instead (see above). A passive listener silently ignores
+    // preventDefault, which let the native click through as well —
+    // toggleExpand is a toggle, so that second, slightly delayed native
+    // click would catch a card mid-collapse-animation and flip it back
+    // open, which is why collapsing an expanded card never actually
+    // stuck.
+    window.addEventListener("touchend", onTouchEnd, { passive: false });
     return () => {
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { Project } from "@/lib/api";
 import DemoMedia from "@/components/DemoMedia";
 import GithubStatCard from "@/components/GithubStatCard";
@@ -46,6 +47,32 @@ export default function ProjectCard({
   onInteractiveLeave,
   onPanelTap,
 }: ProjectCardProps) {
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const onPanelTapRef = useRef(onPanelTap);
+  onPanelTapRef.current = onPanelTap;
+
+  useEffect(() => {
+    if (!isTouchDevice) return;
+    const el = panelRef.current;
+    if (!el) return;
+    // A raw listener, not React's onClick — the touch handler that
+    // drives every tap on this page (see ScrollScenes) dispatches its
+    // own synthetic MouseEvent rather than depending on native
+    // click-after-touch synthesis (which turned out not to survive
+    // preventDefault reliably). React's synthetic event system doesn't
+    // pick that dispatched event up even though it demonstrably
+    // bubbles through the real DOM — the 3D card's own tap-to-expand
+    // already relies on a raw addEventListener for the same reason, so
+    // this matches that instead of fighting it. Skips the GitHub link
+    // so tapping it navigates instead of also collapsing the card.
+    const handler = (event: MouseEvent) => {
+      if ((event.target as HTMLElement | null)?.closest("a")) return;
+      onPanelTapRef.current?.();
+    };
+    el.addEventListener("click", handler);
+    return () => el.removeEventListener("click", handler);
+  }, []);
+
   return (
     <article className="relative flex h-full w-full flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950">
       {/* Echoes the card's own look from before the scroll — its own
@@ -64,7 +91,10 @@ export default function ProjectCard({
       )}
       <div className="pointer-events-none absolute inset-0 bg-zinc-950/70" />
       <div
-        ref={innerScrollRef}
+        ref={(el) => {
+          panelRef.current = el;
+          innerScrollRef?.(el);
+        }}
         data-scroll-region
         className="relative flex-1 overflow-y-auto overscroll-contain p-8"
         // The panel is pointer-events-none by default (see the interactive
@@ -75,7 +105,6 @@ export default function ProjectCard({
         // wheel path, so it needs real hit-testing to scroll natively —
         // only ever turned on for the currently visible, interactive card.
         style={isTouchDevice && interactive ? { pointerEvents: "auto" } : undefined}
-        onClick={isTouchDevice ? onPanelTap : undefined}
       >
         {/* mx-auto + max-w-xl centers this column as a block within the
             panel; items-start + text-left then left-aligns everything
