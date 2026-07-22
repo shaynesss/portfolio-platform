@@ -135,6 +135,13 @@ def update_about(payload: AboutContent, db: Session = Depends(get_db)):
 
 
 @router.put("/pages/ai-workflow", response_model=AiWorkflowContent)
-def update_ai_workflow(payload: AiWorkflowContent, db: Session = Depends(get_db)):
+async def update_ai_workflow(payload: AiWorkflowContent, db: Session = Depends(get_db)):
+    try:
+        stats = await fetch_repo_stats(payload.repo_card.github_url)
+        payload.repo_card.github_stars = stats["stars"]
+        payload.repo_card.github_language = stats["language"]
+    except GithubFetchError:
+        pass
+
     page = _upsert_page(db, "ai_workflow", payload.model_dump(by_alias=True))
     return page.content

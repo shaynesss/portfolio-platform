@@ -65,12 +65,16 @@ class AboutContent(CamelModel):
     github_url: str | None = None
 
 
-class AiWorkflowBlock(CamelModel):
-    heading: str
-    body: str
+class RepoCard(CamelModel):
+    title: str
+    writeup: str
+    github_url: str
+    github_stars: int = 0
+    github_language: str | None = None
+    demo_media_url: str
 
 
 class AiWorkflowContent(CamelModel):
     title: str
     intro: str
-    blocks: list[AiWorkflowBlock]
+    repo_card: RepoCard

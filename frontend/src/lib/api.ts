@@ -25,15 +25,19 @@ export interface AboutContent {
   githubUrl: string | null;
 }
 
-export interface AiWorkflowBlock {
-  heading: string;
-  body: string;
+export interface RepoCard {
+  title: string;
+  writeup: string;
+  githubUrl: string;
+  githubStars: number;
+  githubLanguage: string | null;
+  demoMediaUrl: string;
 }
 
 export interface AiWorkflowContent {
   title: string;
   intro: string;
-  blocks: AiWorkflowBlock[];
+  repoCard: RepoCard;
 }
 
 async function apiGet<T>(path: string): Promise<T> {

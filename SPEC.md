@@ -25,7 +25,7 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 ### Core features (must-haves)
 
 - **About section** (top of page), with LinkedIn, Devpost, and GitHub links at the bottom of it.
-- **"Personal AI Workflow: Noctis" section** — locked copy, see Design Brief section 4 below.
+- **"Personal AI Workflow: Noctis" section** — locked copy, see Design Brief section 4 below. **Redesigned 2026-07-22** (post Noctis OS v1): two-column layout — left column is the locked writeup paragraph; right column is a single "repo showcase card" reusing the exact same 3D card mechanic as a Projects-section card (reflective shard, hover+scroll expand, GitHub stat card), pointing at the Noctis OS repo instead of a portfolio project. Expand is **contained to its own column** (writeup never gets covered), not a full-viewport takeover like a project card's expand — a deliberate scoping choice, not a missing feature. The old multi-block ("Second brain" / "Continuity" / ...) copy grid is retired in favor of this single writeup + card.
 - **Projects section** — schema supports up to 6 slots; 2 populated at launch.
 - **Each project has two states:**
   - *Collapsed:* a suspended, reflective card showing the project's own demo media on its face, gently swaying in place (see Design Brief section 3).
@@ -79,6 +79,7 @@ Shared FastAPI + PostgreSQL backend (Railway), serving two clients:
 
 `pages`:
 - Singleton content blocks — About section body, LinkedIn/Devpost/GitHub URLs, AI Workflow section body (locked copy below).
+- **AI Workflow content, updated 2026-07-22:** `title`, `intro` (the left-column writeup), `repoCard` (`title`, `writeup` — shown inside the card's expanded panel, `githubUrl`, `githubStars`, `githubLanguage` — both fetched server-side same as a project's, `demoMediaUrl`). Replaces the earlier `blocks: [{heading, body}]` shape entirely — no back-compat kept, the TUI/API always write the new shape.
 
 ### External dependencies
 
@@ -166,7 +167,9 @@ Full-page dot field (Three.js particle system). Landing/loading animation: dots 
 
 One shared rounded-box card geometry, reused across every project card — not a unique model per project. Rendered live in Three.js (not pre-rendered video/image). Each card's instance has its own fixed resting tilt and idle-sway phase/speed so the up-to-6 cards never read as copies of one synced asset. Motion is a bounded, gentle sway around that resting tilt — not a continuous tumble — so the card is always legible and reads as floating in place rather than spinning. Hovering and dragging (in any direction) imparts a small extra twirl impulse on top of the idle sway; the impulse decays quickly and the card eases back to its resting, camera-facing tilt rather than drifting or freezing at an odd angle.
 
-### AI Workflow section copy (locked)
+### AI Workflow section copy (locked, superseded 2026-07-22)
+
+**Retired** in favor of the redesign below — kept here for history, not reproduced anywhere in the live site.
 
 > **Personal AI Workflow: Noctis**
 >
@@ -185,6 +188,20 @@ One shared rounded-box card geometry, reused across every project card — not a
 > **The maintenance loop.** Not one-and-done — the whole setup gets periodically re-audited against how I actually work, not left to rot as a document nobody revisits.
 >
 > **How a project moves.** Spec approved in the vault → built task by task against the spine → cleared through all eight ship-gate steps → decisions filed back into the second brain, so the next project starts a step ahead.
+
+### AI Workflow section copy (locked, current — 2026-07-22)
+
+Two-column layout. Left column — section title unchanged, writeup replaced:
+
+> **Personal AI Workflow: Noctis**
+>
+> Noctis OS — a harness that shapes how Claude works for me: five modes (build, learn, research, maintain, and an auditor), all reading and writing into one compounding knowledge graph — inspired by Karpathy's pattern for LLM-maintained wikis. Deliberately never a finished system, built to keep absorbing new modes, tools, and models as the space moves. I use it daily, and it improves itself over time through proposals I review, never silent changes.
+
+Right column — a single repo showcase card, same writeup reused for its expanded-panel copy:
+
+- **Repo:** `https://github.com/shaynesss/noctis-os` (public — GitHub stats fetched server-side, same as a project card)
+- **Demo media:** the repo's own README hero screenshot, hotlinked from `https://raw.githubusercontent.com/shaynesss/noctis-os/main/assets/readme/realhero.jpg` (not re-uploaded — GitHub's raw CDN serves permissive CORS headers, same as any other image `src`, and stays in sync with the repo's own README asset without a separate upload step)
+- **Interaction:** identical 3D card mechanic to a project card (reflective shard, hover+scroll expand, click/tap fallback, GitHub stat card inside), but the expand is contained to the right column only — the left writeup stays visible and uncovered throughout, unlike a project card's near-fullscreen expand.
 
 ### Expand mechanism — full detail
 

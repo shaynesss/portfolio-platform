@@ -6,32 +6,6 @@ from textual.widgets import Button, Input, Label, Static, TextArea
 
 from api_client import ApiClient, ApiError
 
-BLOCK_MARKER = "## "
-
-
-def blocks_to_text(blocks: list[dict]) -> str:
-    return "\n\n".join(f"{BLOCK_MARKER}{b['heading']}\n{b['body']}" for b in blocks)
-
-
-def text_to_blocks(text: str) -> list[dict]:
-    blocks: list[dict] = []
-    heading: str | None = None
-    body_lines: list[str] = []
-
-    def flush() -> None:
-        if heading is not None:
-            blocks.append({"heading": heading, "body": "\n".join(body_lines).strip()})
-
-    for line in text.splitlines():
-        if line.startswith(BLOCK_MARKER):
-            flush()
-            heading = line[len(BLOCK_MARKER):].strip()
-            body_lines = []
-        elif heading is not None:
-            body_lines.append(line)
-    flush()
-    return blocks
-
 
 class PageEditScreen(ModalScreen[bool]):
     """Edit the About or AI Workflow singleton page. Dismisses True if saved."""
@@ -93,17 +67,21 @@ class PageEditScreen(ModalScreen[bool]):
                 yield Label("GitHub URL")
                 yield Input(value=self.content.get("githubUrl") or "", id="github-url")
             else:
+                repo_card = self.content.get("repoCard", {})
                 yield Static("Edit AI Workflow", id="heading")
                 yield Label("Title")
                 yield Input(value=self.content.get("title", ""), id="ai-title")
-                yield Label("Intro")
+                yield Label("Intro / writeup")
                 yield TextArea(self.content.get("intro", ""), id="intro")
-                yield Label(
-                    f"Blocks — one per section, each starting with '{BLOCK_MARKER}heading' "
-                    "on its own line followed by the body text"
-                )
-                yield TextArea(
-                    blocks_to_text(self.content.get("blocks", [])), id="blocks"
+                yield Label("Repo card — title")
+                yield Input(value=repo_card.get("title", ""), id="repo-title")
+                yield Label("Repo card — writeup (shown when the card expands)")
+                yield TextArea(repo_card.get("writeup", ""), id="repo-writeup")
+                yield Label("Repo card — GitHub URL (stats refresh on save)")
+                yield Input(value=repo_card.get("githubUrl", ""), id="repo-github-url")
+                yield Label("Repo card — demo media URL (image)")
+                yield Input(
+                    value=repo_card.get("demoMediaUrl", ""), id="repo-demo-media-url"
                 )
 
             yield Static("", id="error")
@@ -137,11 +115,27 @@ class PageEditScreen(ModalScreen[bool]):
         else:
             title = self.query_one("#ai-title", Input).value.strip()
             intro = self.query_one("#intro", TextArea).text.strip()
-            blocks = text_to_blocks(self.query_one("#blocks", TextArea).text)
-            if not title or not intro or not blocks:
-                error.update("Title, intro, and at least one block are required.")
+            repo_title = self.query_one("#repo-title", Input).value.strip()
+            repo_writeup = self.query_one("#repo-writeup", TextArea).text.strip()
+            repo_github_url = self.query_one("#repo-github-url", Input).value.strip()
+            repo_demo_media_url = self.query_one(
+                "#repo-demo-media-url", Input
+            ).value.strip()
+            if not all(
+                [title, intro, repo_title, repo_writeup, repo_github_url, repo_demo_media_url]
+            ):
+                error.update("All AI Workflow fields are required.")
                 return
-            payload = {"title": title, "intro": intro, "blocks": blocks}
+            payload = {
+                "title": title,
+                "intro": intro,
+                "repoCard": {
+                    "title": repo_title,
+                    "writeup": repo_writeup,
+                    "githubUrl": repo_github_url,
+                    "demoMediaUrl": repo_demo_media_url,
+                },
+            }
 
         try:
             await self.client.update_page(self.page_key, payload)
