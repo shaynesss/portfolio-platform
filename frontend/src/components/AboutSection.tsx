@@ -42,7 +42,7 @@ export default function AboutSection({ content }: AboutSectionProps) {
 
   return (
     <section
-      className="relative z-10 mx-auto flex h-full max-w-2xl flex-col justify-center px-6"
+      className="relative z-10 mx-auto flex h-full max-w-3xl flex-col justify-center px-6"
       style={{
         opacity: visible ? 1 : 0,
         transform: `translateY(${hidden ? TEXT_RISE_PX : 0}px) scale(${hidden ? TEXT_MIN_SCALE : 1})`,
@@ -50,13 +50,13 @@ export default function AboutSection({ content }: AboutSectionProps) {
         transition: `opacity ${TEXT_FADE_MS}ms ${SMOOTH_EASE}, transform ${TEXT_FADE_MS}ms ${SMOOTH_EASE}, filter ${TEXT_FADE_MS}ms ${SMOOTH_EASE}`,
       }}
     >
-      <h1 className="text-4xl font-semibold tracking-tight text-zinc-50 sm:text-5xl">
+      <h1 className="text-5xl font-semibold tracking-tight text-zinc-50 sm:text-6xl">
         Shayne Yong
       </h1>
-      <p className="mt-6 text-lg leading-relaxed text-zinc-400">
+      <p className="mt-8 text-xl leading-relaxed text-zinc-400">
         {content.body}
       </p>
-      <div className="mt-10 flex gap-6 text-sm font-medium text-zinc-300">
+      <div className="mt-12 flex gap-8 text-base font-medium text-zinc-300">
         <a
           href={withScheme(content.linkedinUrl)}
           target="_blank"

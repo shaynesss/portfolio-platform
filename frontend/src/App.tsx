@@ -27,10 +27,11 @@ function App() {
       <DotBackground />
       {about && aiWorkflow && (
         <ScrollScenes
+          transitionVh={90}
           scenes={[
             () => <AboutSection content={about} />,
             (active) => <AIWorkflowSection content={aiWorkflow} active={active} />,
-            () => <ProjectsSection projects={projects} />,
+            (active) => <ProjectsSection projects={projects} active={active} />,
           ]}
         />
       )}

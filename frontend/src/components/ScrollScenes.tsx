@@ -114,28 +114,77 @@ export default function ScrollScenes({
     sceneOpacity(i, scenes.length, progress, holdFraction, transitionFraction, stride),
   );
 
-  // Sticky once true: a scene becomes "active" the moment it first
-  // starts fading in (opacity > 0), and stays active even if the user
-  // scrolls back past it later — a heavy mount inside it (e.g. a
-  // Three.js canvas) shouldn't tear down and re-initialize every time
-  // the scene dips back out of view.
+  // Sticky once true: a scene becomes "active" the moment progress first
+  // crosses the point where it would start fading in, and stays active
+  // even if the user later scrolls back past it — a heavy mount inside
+  // it (e.g. a Three.js canvas) shouldn't tear down and re-initialize
+  // every time the scene dips back out of view. Deliberately a direct
+  // threshold check against `progress`, not "was opacity ever sampled
+  // > 0" — the scroll listener coalesces multiple scroll events into a
+  // single rAF-scheduled update (see useScrollProgress), so a fast
+  // fling or an instant jump (End key, dragging the scrollbar thumb)
+  // can render only the final position and skip every intermediate
+  // frame in between. A threshold compared against wherever progress
+  // ends up catches that case too; sampled opacity would not.
   const activeRef = useRef<boolean[]>(scenes.map(() => false));
   if (activeRef.current.length !== scenes.length) {
     activeRef.current = scenes.map((_, i) => activeRef.current[i] ?? false);
   }
-  opacities.forEach((o, i) => {
-    if (o > 0) activeRef.current[i] = true;
+  scenes.forEach((_, i) => {
+    if (i === 0) {
+      activeRef.current[i] = true;
+      return;
+    }
+    const holdStart = i * stride;
+    const fadeInStart = Math.max(0, holdStart - transitionFraction / 2);
+    if (progress >= fadeInStart) activeRef.current[i] = true;
   });
 
   // Once the user stops scrolling, resolve any overshoot into a
   // transition zone by smoothly finishing the trip into whichever
   // section is closer — makes it much harder to accidentally leave the
   // page half-scrolled between two sections.
+  //
+  // Driven manually via rAF rather than `scrollTo({behavior:"smooth"})`:
+  // a native smooth-scroll animation keeps running for its own fixed
+  // duration once started, and genuine new wheel input doesn't reliably
+  // interrupt it — if the 140ms settle timer ever fires early relative
+  // to an ongoing gesture (a stray gap between wheel events, easy to
+  // hit with a longer transition zone or a slower/discrete scroll
+  // wheel), the resulting snap-back animation can fight the user's next
+  // few scroll ticks for hundreds of ms, reading as the page "getting
+  // stuck" and refusing to scroll forward. A manual rAF loop can be
+  // cancelled the instant any new wheel/touch input arrives, so it
+  // never has the chance to fight.
   useEffect(() => {
     const container = containerRef.current;
     if (!container || prefersReducedMotion || scenes.length < 2) return;
 
     let settleTimer: number | undefined;
+    let animId: number | null = null;
+
+    const cancelSnapAnimation = () => {
+      if (animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    };
+
+    const animateScrollTo = (targetY: number) => {
+      cancelSnapAnimation();
+      const startY = window.scrollY;
+      const distance = targetY - startY;
+      if (Math.abs(distance) < 1) return;
+      const duration = 500;
+      const startTime = performance.now();
+
+      const step = (now: number) => {
+        const t = Math.min(1, (now - startTime) / duration);
+        window.scrollTo(0, startY + distance * easeInOutCubic(t));
+        animId = t < 1 ? requestAnimationFrame(step) : null;
+      };
+      animId = requestAnimationFrame(step);
+    };
 
     const trySnap = () => {
       const rect = container.getBoundingClientRect();
@@ -147,7 +196,7 @@ export default function ScrollScenes({
       if (target === null) return;
 
       const targetScrollY = window.scrollY + rect.top + target * scrollableDistance;
-      window.scrollTo({ top: targetScrollY, behavior: "smooth" });
+      animateScrollTo(targetScrollY);
     };
 
     const onScroll = () => {
@@ -155,10 +204,19 @@ export default function ScrollScenes({
       settleTimer = window.setTimeout(trySnap, SNAP_SETTLE_MS);
     };
 
+    // Any fresh user input immediately yields control back — no
+    // waiting for the settle timer, no fighting an in-flight snap.
+    const onUserInput = () => cancelSnapAnimation();
+
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onUserInput, { passive: true });
+    window.addEventListener("touchmove", onUserInput, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onUserInput);
+      window.removeEventListener("touchmove", onUserInput);
       window.clearTimeout(settleTimer);
+      cancelSnapAnimation();
     };
   }, [scenes.length, holdFraction, stride]);
 

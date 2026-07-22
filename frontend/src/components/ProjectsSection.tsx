@@ -7,9 +7,14 @@ import { cardExpandedScreenRect, crossfadeT, type ScreenRect } from "@/lib/cardL
 
 interface ProjectsSectionProps {
   projects: Project[];
+  // Deferred mount signal from ScrollScenes — the shared card scene's
+  // Three.js canvas only initializes once this section has actually
+  // started fading into view, same as NoctisRepoCard in the AI Workflow
+  // section, instead of every section's canvas running from page load.
+  active: boolean;
 }
 
-export default function ProjectsSection({ projects }: ProjectsSectionProps) {
+export default function ProjectsSection({ projects, active }: ProjectsSectionProps) {
   const {
     progress,
     setHoveredIndex,
@@ -48,6 +53,10 @@ export default function ProjectsSection({ projects }: ProjectsSectionProps) {
       mediaRects.current[i] = { x: r.left, y: r.top, width: r.width, height: r.height };
     });
   }, [projects.length, viewport.width, viewport.height]);
+
+  if (!active) {
+    return <section className="relative z-10 h-full w-full" />;
+  }
 
   return (
     <section className="relative z-10 h-full w-full">
