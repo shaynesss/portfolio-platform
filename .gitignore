@@ -18,3 +18,9 @@ dist/
 
 # os
 .DS_Store
+
+# VS Code resume-task state, regenerated on every Dev-mode launch — local
+# machine state, not source (see noctis-os's launch_surfaces.py for what
+# writes this).
+.vscode/tasks.json
+.vscode/settings.json
