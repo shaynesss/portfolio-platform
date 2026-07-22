@@ -189,19 +189,23 @@ One shared rounded-box card geometry, reused across every project card — not a
 >
 > **How a project moves.** Spec approved in the vault → built task by task against the spine → cleared through all eight ship-gate steps → decisions filed back into the second brain, so the next project starts a step ahead.
 
-### AI Workflow section copy (locked, current — 2026-07-22)
+### AI Workflow section copy (locked, current — updated 2026-07-22)
 
-Two-column layout. Left column — section title unchanged, writeup replaced:
+Two-column layout. Left column — section title changed to **"How I Work"** (was "Personal AI Workflow: Noctis"), writeup unchanged from the first redesign pass:
 
-> **Personal AI Workflow: Noctis**
+> **How I Work**
 >
 > Noctis OS — a harness that shapes how Claude works for me: five modes (build, learn, research, maintain, and an auditor), all reading and writing into one compounding knowledge graph — inspired by Karpathy's pattern for LLM-maintained wikis. Deliberately never a finished system, built to keep absorbing new modes, tools, and models as the space moves. I use it daily, and it improves itself over time through proposals I review, never silent changes.
 
-Right column — a single repo showcase card, same writeup reused for its expanded-panel copy:
+Right column — a single repo showcase card, sized much larger and vertically centered in its column (was a small, top-aligned box). Its own expanded-panel writeup is now **distinct** from the left column — a summary of the repo's own README "What this is" intro, not a reuse of the left copy:
+
+> A persistent pixel-art "world" where five characters — Faber (build), Noctua (learn), Vesper (research), Custos (maintain), and Echo (the overnight auditor) — each represent a mode with its own methodology, subagents, and working context, all reading and writing one shared knowledge graph. Click a character to see its live state and launch a real Claude Code session with that mode's context already loaded. Single-user, single-machine by design, and it improves itself over time through proposals reviewed by hand — never silent changes.
 
 - **Repo:** `https://github.com/shaynesss/noctis-os` (public — GitHub stats fetched server-side, same as a project card)
 - **Demo media:** the repo's own README hero screenshot, hotlinked from `https://raw.githubusercontent.com/shaynesss/noctis-os/main/assets/readme/realhero.jpg` (not re-uploaded — GitHub's raw CDN serves permissive CORS headers, same as any other image `src`, and stays in sync with the repo's own README asset without a separate upload step)
-- **Interaction:** identical 3D card mechanic to a project card (reflective shard, hover+scroll expand, click/tap fallback, GitHub stat card inside), but the expand is contained to the right column only — the left writeup stays visible and uncovered throughout, unlike a project card's near-fullscreen expand.
+- **Interaction:** identical 3D card mechanic to a project card (reflective shard, hover-tilt, swipe-twirl, hover+scroll expand, click/tap fallback, GitHub stat card inside), but the expand is contained to the right column only — the left writeup stays visible and uncovered throughout, unlike a project card's near-fullscreen expand.
+- **Camera framing:** the shared row camera math (`cardLayout.ts`) has a `MIN_CAMERA_Z` floor tuned for a row of up to 6 project cards sharing the full page width — applied as-is, it left this lone card looking small regardless of its container size. `computeCameraZ`/`expandTargetScale`/`cardExpandedScreenRect` and `ProjectCardScene` now take an optional `minCameraZ` override (defaults to the original `MIN_CAMERA_Z`, so `ProjectsSection`'s framing is unchanged); the Noctis card passes a lower value so it fills its own container properly.
+- **Lazy mount:** the card's Three.js scene no longer initializes at page load alongside every other section — `ScrollScenes` now tracks, per scene, whether it has ever started fading into view (sticky once true) and only then does `AIWorkflowSection` mount `NoctisRepoCard`. Scoped to this section only; `ProjectsSection`'s own canvas still mounts eagerly (unchanged, not part of this ask).
 
 ### Expand mechanism — full detail
 

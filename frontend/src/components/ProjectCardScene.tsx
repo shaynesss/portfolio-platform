@@ -7,6 +7,7 @@ import {
   CARD_HEIGHT,
   CAMERA_FOV_DEG,
   EXPAND_FORWARD_CREEP,
+  MIN_CAMERA_Z,
   cardBaseX,
   computeCameraZ,
   rowSpan,
@@ -22,6 +23,11 @@ interface ProjectCardSceneProps {
   onHover: (index: number | null) => void;
   onWheel: (index: number, deltaY: number) => boolean;
   onToggleExpand: (index: number) => void;
+  // Overrides cardLayout's row-tuned MIN_CAMERA_Z floor — a lone card in
+  // its own small, fixed-aspect container (not sharing a frame with up
+  // to 6 others) can sit much closer without the distortion risk that
+  // floor exists to prevent for a shared row.
+  minCameraZ?: number;
 }
 
 interface CardInstance {
@@ -287,6 +293,7 @@ export default function ProjectCardScene({
   onHover,
   onWheel,
   onToggleExpand,
+  minCameraZ = MIN_CAMERA_Z,
 }: ProjectCardSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(progress);
@@ -318,9 +325,9 @@ export default function ProjectCardScene({
       0.1,
       100,
     );
-    let restCameraZ = computeCameraZ(totalRowWidth, width / height);
+    let restCameraZ = computeCameraZ(totalRowWidth, width / height, minCameraZ);
     camera.position.set(0, 0, restCameraZ);
-    let targetExpandScale = expandTargetScale(projects.length, width, height);
+    let targetExpandScale = expandTargetScale(projects.length, width, height, minCameraZ);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
@@ -657,11 +664,11 @@ export default function ProjectCardScene({
       const w = container.clientWidth;
       const h = container.clientHeight;
       camera.aspect = w / h;
-      restCameraZ = computeCameraZ(totalRowWidth, w / h);
+      restCameraZ = computeCameraZ(totalRowWidth, w / h, minCameraZ);
       camera.position.z = restCameraZ;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
-      targetExpandScale = expandTargetScale(projects.length, w, h);
+      targetExpandScale = expandTargetScale(projects.length, w, h, minCameraZ);
     };
     window.addEventListener("resize", handleResize);
 

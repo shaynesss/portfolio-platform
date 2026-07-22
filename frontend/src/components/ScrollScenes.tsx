@@ -32,8 +32,15 @@ function findSnapTarget(
   return null;
 }
 
+// Each scene is a render function, not a plain node — it receives
+// whether its own section has ever started fading into view, so a
+// scene with a heavy mount (a Three.js canvas, say) can defer that
+// mount until it's actually about to be seen instead of initializing
+// every scene at once on page load.
+type SceneRenderer = (active: boolean) => ReactNode;
+
 interface ScrollScenesProps {
-  scenes: ReactNode[];
+  scenes: SceneRenderer[];
   holdVh?: number;
   transitionVh?: number;
 }
@@ -106,6 +113,19 @@ export default function ScrollScenes({
   const opacities = scenes.map((_, i) =>
     sceneOpacity(i, scenes.length, progress, holdFraction, transitionFraction, stride),
   );
+
+  // Sticky once true: a scene becomes "active" the moment it first
+  // starts fading in (opacity > 0), and stays active even if the user
+  // scrolls back past it later — a heavy mount inside it (e.g. a
+  // Three.js canvas) shouldn't tear down and re-initialize every time
+  // the scene dips back out of view.
+  const activeRef = useRef<boolean[]>(scenes.map(() => false));
+  if (activeRef.current.length !== scenes.length) {
+    activeRef.current = scenes.map((_, i) => activeRef.current[i] ?? false);
+  }
+  opacities.forEach((o, i) => {
+    if (o > 0) activeRef.current[i] = true;
+  });
 
   // Once the user stops scrolling, resolve any overshoot into a
   // transition zone by smoothly finishing the trip into whichever
@@ -303,7 +323,7 @@ export default function ScrollScenes({
                 pointerEvents: opacities[i] < 0.05 ? "none" : "auto",
               }}
             >
-              {scene}
+              {scene(activeRef.current[i])}
             </div>
           );
         })}

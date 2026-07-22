@@ -29,12 +29,21 @@ export function rowSpan(count: number): number {
 }
 
 // Zooms the camera out as more cards are added so a row of up to 6
-// always fits the frame, instead of overflowing off-screen.
-export function computeCameraZ(totalWidth: number, aspect: number): number {
-  if (totalWidth <= 0) return MIN_CAMERA_Z;
+// always fits the frame, instead of overflowing off-screen. The floor
+// (MIN_CAMERA_Z by default) exists so a row of only 1-2 cards doesn't
+// zoom in uncomfortably close — but that same floor fights a single
+// card meant to fill its own (smaller, fixed-aspect) container, so
+// callers with their own scene — not a shared row — can pass a lower
+// floor instead of the row-tuned default.
+export function computeCameraZ(
+  totalWidth: number,
+  aspect: number,
+  minCameraZ: number = MIN_CAMERA_Z,
+): number {
+  if (totalWidth <= 0) return minCameraZ;
   const halfFovRad = (CAMERA_FOV_DEG * Math.PI) / 360;
   const z = totalWidth / (ROW_FILL_FACTOR * 2 * Math.tan(halfFovRad) * aspect);
-  return Math.max(MIN_CAMERA_Z, z);
+  return Math.max(minCameraZ, z);
 }
 
 // Progress (0-1) at which the 3D card finishes growing and settling —
@@ -79,9 +88,10 @@ export function expandTargetScale(
   count: number,
   viewportWidth: number,
   viewportHeight: number,
+  minCameraZ: number = MIN_CAMERA_Z,
 ): number {
   const aspect = viewportWidth / viewportHeight;
-  const restCamZ = computeCameraZ(rowSpan(count), aspect);
+  const restCamZ = computeCameraZ(rowSpan(count), aspect, minCameraZ);
   const camZ = restCamZ - EXPAND_FORWARD_CREEP;
   const halfFovRad = (CAMERA_FOV_DEG * Math.PI) / 360;
   const scale = viewportHeight / (2 * camZ * Math.tan(halfFovRad));
@@ -165,16 +175,17 @@ export function cardExpandedScreenRect(
   viewportWidth: number,
   viewportHeight: number,
   progress: number,
+  minCameraZ: number = MIN_CAMERA_Z,
 ): ScreenRect {
   const dive = expandDive(progress);
   const aspect = viewportWidth / viewportHeight;
-  const restCamZ = computeCameraZ(rowSpan(count), aspect);
+  const restCamZ = computeCameraZ(rowSpan(count), aspect, minCameraZ);
   const camZ = restCamZ - dive * EXPAND_FORWARD_CREEP;
   const halfFovRad = (CAMERA_FOV_DEG * Math.PI) / 360;
   const scale = viewportHeight / (2 * camZ * Math.tan(halfFovRad));
   const baseX = cardBaseX(index, count);
   const meshX = baseX + (0 - baseX) * dive;
-  const targetScale = expandTargetScale(count, viewportWidth, viewportHeight);
+  const targetScale = expandTargetScale(count, viewportWidth, viewportHeight, minCameraZ);
   const cardScale = 1 + dive * (targetScale - 1);
   const widthPx = CARD_WIDTH * cardScale * scale;
   const heightPx = CARD_HEIGHT * cardScale * scale;

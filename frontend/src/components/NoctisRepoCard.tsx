@@ -9,6 +9,14 @@ interface NoctisRepoCardProps {
   repoCard: RepoCard;
 }
 
+// cardLayout's MIN_CAMERA_Z (9) is tuned for a shared row of up to 6
+// cards spanning the full page width — applied here, it holds the
+// camera much further back than this single card's own small,
+// fixed-aspect container needs, making it read as tiny regardless of
+// how big the container itself is. This card doesn't share a frame
+// with anything else, so it can sit much closer.
+const NOCTIS_CARD_MIN_CAMERA_Z = 3.4;
+
 // A single-card, contained-expand sibling of ProjectsSection: same 3D
 // card mechanic (ProjectCardScene/ProjectCard/useCardExpand/cardLayout,
 // all reused unmodified), but scoped to its own container's own
@@ -81,7 +89,14 @@ export default function NoctisRepoCard({ repoCard }: NoctisRepoCardProps) {
   let mediaTransform: string | undefined;
   const finalMediaRect = mediaRect.current;
   if (finalMediaRect && box.width > 0 && box.height > 0) {
-    const bigRect = cardExpandedScreenRect(0, 1, box.width, box.height, p);
+    const bigRect = cardExpandedScreenRect(
+      0,
+      1,
+      box.width,
+      box.height,
+      p,
+      NOCTIS_CARD_MIN_CAMERA_Z,
+    );
     // bigRect is relative to the container's own coordinate space
     // (0,0 top-left of the container) since box.width/height came from
     // the container, not the window — but finalMediaRect was measured
@@ -113,6 +128,7 @@ export default function NoctisRepoCard({ repoCard }: NoctisRepoCardProps) {
         onHover={setHoveredIndex}
         onWheel={handleWheel}
         onToggleExpand={toggleExpand}
+        minCameraZ={NOCTIS_CARD_MIN_CAMERA_Z}
       />
       <div
         className="pointer-events-none absolute inset-3 sm:inset-6 md:inset-8"

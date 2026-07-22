@@ -28,9 +28,9 @@ function App() {
       {about && aiWorkflow && (
         <ScrollScenes
           scenes={[
-            <AboutSection content={about} />,
-            <AIWorkflowSection content={aiWorkflow} />,
-            <ProjectsSection projects={projects} />,
+            () => <AboutSection content={about} />,
+            (active) => <AIWorkflowSection content={aiWorkflow} active={active} />,
+            () => <ProjectsSection projects={projects} />,
           ]}
         />
       )}
