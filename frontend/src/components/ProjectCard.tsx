@@ -113,11 +113,24 @@ export default function ProjectCard({
         <div className="mx-auto flex max-w-xl flex-col items-start text-left">
           <div
             ref={mediaWrapperRef}
-            className="w-full"
+            className={`w-full ${interactive ? "cursor-pointer" : ""}`}
             style={{
               transform: mediaTransform,
               transformOrigin: "center center",
+              // Only the currently-visible card's image is a real click
+              // target — this is the exit gesture (see onClick below);
+              // everything else in the panel stays pass-through so hover/
+              // scroll can keep driving the canvas underneath.
+              pointerEvents: interactive ? "auto" : "none",
             }}
+            onClick={
+              interactive
+                ? (e) => {
+                    e.stopPropagation();
+                    onPanelTapRef.current?.();
+                  }
+                : undefined
+            }
           >
             <DemoMedia
               type={project.demoMediaType}

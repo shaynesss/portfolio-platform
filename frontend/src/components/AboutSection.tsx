@@ -1,13 +1,7 @@
-import { useEffect, useState } from "react";
 import type { AboutContent } from "@/lib/api";
-import { LANDING_SEQUENCE_MS } from "@/components/DotBackground";
 import { withScheme } from "@/lib/url";
 
 const TEXT_FADE_MS = 1600;
-// Starts noticeably before the particle field is fully done staging in
-// — waiting for the complete sequence made the landing screen feel slow.
-const EARLY_START_MS = 750;
-const TEXT_START_DELAY_MS = Math.max(0, LANDING_SEQUENCE_MS - EARLY_START_MS);
 // A smoother deceleration than a plain ease-out, matching the same
 // curve used for the section-to-section cross-dissolve.
 const SMOOTH_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -17,26 +11,16 @@ const TEXT_MIN_SCALE = 0.9;
 
 interface AboutSectionProps {
   content: AboutContent;
+  // Externally driven, not a timer off its own mount — this section now
+  // reveals mid-swing when the cathedral gate is clicked open, so the
+  // caller (App) owns exactly when that happens.
+  visible: boolean;
 }
 
-export default function AboutSection({ content }: AboutSectionProps) {
-  const [visible, setVisible] = useState(false);
+export default function AboutSection({ content, visible }: AboutSectionProps) {
   const prefersReducedMotion = window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
-
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setVisible(true);
-      return;
-    }
-
-    // Text starts fading in a bit before the particle field's staged
-    // reveal is fully done, not after — the two tail ends overlap.
-    const timer = setTimeout(() => setVisible(true), TEXT_START_DELAY_MS);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const hidden = !visible && !prefersReducedMotion;
 

@@ -2,6 +2,8 @@
 
 Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready for Phase 2 (Setup) in Claude Code.
 
+**Frontend Overhaul — Cathedral redesign, locked 2026-07-25 (Track: Overhaul).** Ground-up rework of the frontend's narrative and visual system, replacing the independent-section/crossfade model with a single continuous scroll-driven camera flythrough of a stylized cathedral. See the addenda in PRD §2 ("Frontend narrative overhaul"), EDD §3 ("Cathedral scene architecture"), and Design Brief §4 ("Cathedral redesign") — each supersedes the sections it touches; untouched decisions (data model, backend, TUI, deployment targets) stay locked as-is.
+
 ---
 
 ## 1. Definition
@@ -24,13 +26,13 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 
 ### Core features (must-haves)
 
-- **About section** (top of page), with LinkedIn, Devpost, and GitHub links at the bottom of it.
-- **"Personal AI Workflow: Noctis" section** — locked copy, see Design Brief section 4 below. **Redesigned 2026-07-22** (post Noctis OS v1): two-column layout — left column is the locked writeup paragraph; right column is a single "repo showcase card" reusing the exact same 3D card mechanic as a Projects-section card (reflective shard, hover+scroll expand, GitHub stat card), pointing at the Noctis OS repo instead of a portfolio project. Expand is **contained to its own column** (writeup never gets covered), not a full-viewport takeover like a project card's expand — a deliberate scoping choice, not a missing feature. The old multi-block ("Second brain" / "Continuity" / ...) copy grid is retired in favor of this single writeup + card.
-- **Projects section** — schema supports up to 6 slots; 2 populated at launch.
+- **About section**. **Redesigned 2026-07-25** (cathedral overhaul): no longer a static top-of-page block — revealed mid-swing when the entry gate is opened, see "Frontend narrative overhaul" below. Copy content and the LinkedIn/Devpost/GitHub links at its bottom are unchanged, only the staging/reveal mechanism changes.
+- **"How I Work" section** — locked copy, see Design Brief section 4 below. Two-column layout — left column is the locked writeup paragraph; right column is a single "repo showcase card" reusing the exact same 3D card mechanic as a Projects-section card (reflective shard, hover+scroll expand, GitHub stat card), pointing at the Noctis OS repo instead of a portfolio project. Expand is **contained to its own column** (writeup never gets covered), not a full-viewport takeover like a project card's expand — a deliberate scoping choice, not a missing feature. **Staged inside the cathedral nave as of the 2026-07-25 cathedral overhaul** (see below) — content, copy, and the showcase card's own reflective-slab shape are unchanged; only its environment changes.
+- **Projects section** — schema supports up to 6 slots; 2 populated at launch. **Redesigned 2026-07-25** (cathedral overhaul): the 6 slots are now the 6 stained-glass panes of the cathedral's rose window, revealed at the end of the flythrough — see "Frontend narrative overhaul" below.
 - **Each project has two states:**
-  - *Collapsed:* a suspended, reflective card showing the project's own demo media on its face, gently swaying in place (see Design Brief section 3).
-  - *Expanded:* demo media, title, "about this project" writeup, GitHub stat card — fills most of the viewport but leaves a margin (not full-bleed; background stays visible at the edges).
-- **Expand mechanism** (see Design Brief section 5 for full detail — hover+scroll on desktop, tap on mobile, click/tap always works as a fallback regardless of gesture support).
+  - *Collapsed:* **redesigned 2026-07-25** — a stained-glass rose-window pane (wedge shape) showing the project's own demo media as its backlit "glass," instead of a suspended reflective card slab (see Design Brief section 4, "Cathedral redesign").
+  - *Expanded:* demo media, title, "about this project" writeup, GitHub stat card — fills most of the viewport but leaves a margin (not full-bleed; background stays visible at the edges). Unchanged by the cathedral overhaul.
+- **Expand mechanism** (see Design Brief section 5 for full detail — hover+scroll on desktop, tap on mobile, click/tap always works as a fallback regardless of gesture support). Unchanged by the cathedral overhaul — only the collapsed-state shape changes (above), the interaction mechanic itself carries over 1:1 onto the new pane shape.
 - **GitHub stat card** inside the expanded view (stars, primary language, etc.) — clickable, exits to the actual repo.
 - **Demo media**, per project: `image` or `video` via `demo_media_type` + `demo_media_url` (+ `video_source` when type is video — starts as YouTube unlisted, swappable later without a schema change).
 - **TUI is the sole write path** — add/edit/remove project slots (up to 6), edit About/AI Workflow page content, trigger GitHub stat refresh (manual, also fires automatically on "add project").
@@ -46,9 +48,20 @@ Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready fo
 - Custom domain (ships on default Vercel URL)
 - `pipx`-installable TUI packaging
 
-### User flow
+### User flow (superseded 2026-07-25 — see "Frontend narrative overhaul" below)
 
-Landing (dot-field background fades in, dots out of sync with each other) → About section (LinkedIn, Devpost, and GitHub links at the bottom) → AI Workflow section → Projects section, reflective cards floating/swaying independently → hover + scroll a card to expand it in place; if the writeup is long, continued scroll once fully expanded scrolls the content internally rather than continuing to expand → scroll back (or move cursor off, which triggers a slow snap-back) to collapse → repeat for the next card. The whole portfolio is the shareable unit — no per-project deep link, no route changes anywhere on the page.
+**Kept for history, not reproduced on the live site.** Landing (dot-field background fades in, dots out of sync with each other) → About section (LinkedIn, Devpost, and GitHub links at the bottom) → AI Workflow section → Projects section, reflective cards floating/swaying independently → hover + scroll a card to expand it in place; if the writeup is long, continued scroll once fully expanded scrolls the content internally rather than continuing to expand → scroll back (or move cursor off, which triggers a slow snap-back) to collapse → repeat for the next card. The whole portfolio is the shareable unit — no per-project deep link, no route changes anywhere on the page.
+
+### Frontend narrative overhaul (locked 2026-07-25, Track: Overhaul)
+
+Replaces the User flow above. A single continuous scroll-driven camera flythrough of a stylized, dark cathedral (Notre-Dame de Reims gate + rose window as the visual reference — two user-supplied photos analyzed into the Design Brief, section 4). Four beats:
+
+1. **Gate, closed.** Landing state — cathedral exterior, carved stone archway, statue-lined jambs, double wood doors, framed head-on. Idle hover interaction: the doors crack open slightly and a shaft of light spills through the gap, then eases shut again on hover-out.
+2. **Gate opens.** The one **click**-driven beat on the page (tap on mobile) — everything else is scroll. Clicking/tapping the gate swings both doors open on their hinges; the About Me copy (bio + LinkedIn/Devpost/GitHub links, content unchanged from the old About section) fades in mid-swing, over the widening gap. **Scroll is inert until this click happens** — it's the one deliberate "enter" gesture. Once opened, the gate stays open for the rest of the session (scrolling back up does not require re-clicking it).
+3. **Interior pan-up.** Continued scroll glides the camera forward through the now-open doorway into a dark, deliberately vague nave, tilting upward but holding short of the rose window. "How I Work" (locked copy + the Noctis OS showcase card, both unchanged in content and the card's own shape) appears while the camera holds this framing.
+4. **Rose window reveal.** Further scroll completes the pan to frame the stained-glass rose window head-on. Its 6 wedge-shaped panes are the Projects section (1:1 with the existing up-to-6-slot schema) — same expand mechanism as today (hover+scroll on desktop, tap on mobile, click/tap fallback always available, independent per-pane state, GitHub stat card, inner-scroll overflow on long writeups), only the collapsed shape changes from card-slab to glass pane.
+
+Scrolling back up from the rose window reverses the camera path symmetrically back through the nave to the open gate. No audio (evaluated, explicitly declined — see Design Brief). The whole portfolio remains the single shareable unit — no per-project deep link, no route changes anywhere on the page.
 
 ---
 
@@ -96,6 +109,17 @@ Railway (FastAPI + Postgres backend), Vercel (React frontend) — locked per the
 **Card rendering.** One shared Three.js scene/renderer, **not** one WebGL canvas per card — running up to 6 independent WebGL contexts simultaneously is a real performance risk. Multiple mesh instances of the same rounded-box card geometry, positioned per card, each with its own resting tilt, idle-sway phase/speed, and swipe-twirl state so cards don't read as synced copies of one asset. Material: `MeshPhysicalMaterial`, polished dark metal (high metalness, low roughness, clearcoat) on the edges/back for a mirror-like reflective slab, reflecting an environment map built from the same dotted-starfield motif as the page background; the front face carries a separate, less-metallic material instance with the project's own demo media applied as a texture (image, YouTube thumbnail, or a live video texture for self-hosted video) so each card shows a live preview of the project it represents.
 
 **Expand mechanism.** The `scroll-expansion-hero` reference component is **not used as-is** — it hijacks the whole page's wheel/touch events for a single full-viewport takeover, which doesn't repeat cleanly across up to 6 cards and has no click/tap trigger built in. Replaced with a **hover-scoped, per-card scroll capture**: scroll only drives a given card's expand progress while the cursor is over that specific card; the page scrolls normally everywhere else. Full detail in Design Brief section 5. This also needs `next/image` (Next.js-only) ported to a plain `<img>` if any of the reference component's structure is reused.
+
+### Cathedral scene architecture (2026-07-25, Track: Overhaul)
+
+Supersedes the "Background dot field," "Card rendering," and "Expand mechanism" notes above for the collapsed-state visuals and scene structure; the expand *interaction* mechanic (hover+scroll capture, click/tap fallback, per-card independence) is unchanged and still governed by those notes plus Design Brief section 5.
+
+- **Single continuous scene, not per-section canvases.** The current per-section lazy-mount/crossfade model (`ScrollScenes` mounting an independent Three.js canvas per section) is replaced by **one shared Three.js scene/renderer spanning the whole page**. A single camera rig's position/rotation is driven by overall scroll progress through named waypoints (gate-closed → gate-open → interior-pan → rose-window), rather than crossfading between separate section canvases. This is a bigger architectural change than the card-rendering rule it replaces, but keeps the same underlying constraint that motivated it: at most one live WebGL context for the whole page, never one per element.
+- **Gate asset.** Stylized, low-poly/procedural geometry (arch shape, statue-lined jambs suggested with simple repeated forms rather than modeled individually, two door meshes) — not photoreal, matching the "vague, dark, let contents shine" direction from both reference photos. Hover state: a small Y-axis rotation crack on each door mesh plus an emissive plane/spotlight simulating light through the gap. Click/tap: doors rotate open on their hinge (Y-axis), synced with the About copy's fade-in.
+- **Rose window / project panes.** Six wedge/petal-shaped plane meshes arranged radially (real rose-window tracery layout, referencing the supplied interior photo), each carrying the project's `demo_media_type` texture as before — reusing the existing texture-mapping approach from today's cards, just remapped onto a wedge instead of a rounded-box slab. Treated as backlit "glass": an emissive/rim-lit material rather than the current polished-metal card material. The expanded-state panel (writeup + GitHub stat card) is unchanged — it was already a flat UI overlay, not shaped like the collapsed card.
+- **Nave environment.** A simple, dark, low-detail extruded arch/tunnel geometry for the "How I Work" beat — enough to read as cathedral interior without being a modeled space. The Noctis OS showcase card keeps its current reflective-slab geometry/material (per Shayne's call, 2026-07-25), just repositioned inside this nave instead of on the flat charcoal background.
+- **Atmosphere.** The dot-field background becomes dust motes drifting in implied light shafts — a direct evolution of the existing `DotBackground` component's cursor-repel and `prefers-reduced-motion` logic (same interaction rules, restyled particles), not a new system. Persists across all three interior beats as ambient atmosphere.
+- **No audio** — evaluated (hashgraphvc.com reference had a sound toggle), explicitly declined by Shayne. Not in scope.
 
 ### Folder structure
 
@@ -167,6 +191,31 @@ Full-page dot field (Three.js particle system). Landing/loading animation: dots 
 
 One shared rounded-box card geometry, reused across every project card — not a unique model per project. Rendered live in Three.js (not pre-rendered video/image). Each card's instance has its own fixed resting tilt and idle-sway phase/speed so the up-to-6 cards never read as copies of one synced asset. Motion is a bounded, gentle sway around that resting tilt — not a continuous tumble — so the card is always legible and reads as floating in place rather than spinning. Hovering and dragging (in any direction) imparts a small extra twirl impulse on top of the idle sway; the impulse decays quickly and the card eases back to its resting, camera-facing tilt rather than drifting or freezing at an odd angle.
 
+### Cathedral redesign (locked 2026-07-25, Track: Overhaul)
+
+Ground-up rework of the palette, environment, and collapsed-card asset. Supersedes "Palette & material," "Background," and parts of "Node / card asset" above for anything not explicitly carried over. Reference: two user-supplied photos of Notre-Dame de Reims — (1) the portal/gate, carved stone archivolt with statue-lined jambs, wood double doors, stained glass visible at the edge; (2) the interior rose window above the doors, radial jewel-tone stained-glass tracery in deep blues, reds, and gold against dark stone. Both analyzed directly into this brief (no Design Lodge entries existed for this direction — a real gap, worth saving these back to the Lodge once the build lands).
+
+**Palette & material.** Overall darkness carries over from the current dark-charcoal direction — stone grey and near-black shadow dominate every beat, with the stained glass as the only strong, saturated color in the whole piece (deep blues, reds, gold), deliberately so it reads as the payoff. Wood tone (warm, dark-stained) for the gate doors, muted stone grey for all carved/architectural surfaces. No metallic "polished slab" material anywhere except the Noctis OS card, which keeps its current material treatment unchanged.
+
+**Gate asset.** Modeled loosely on reference photo (1): pointed stone archway, a suggestion of statue-lined jambs (repeated simple forms, not individually sculpted), two large wood-plank doors meeting at a center seam. Kept deliberately vague/low-detail — texture and lighting carry the read, not geometric fidelity. Idle: doors ajar a few degrees on hover, warm light bleeding through the gap. Open: both doors rotate outward on their hinges.
+
+**Rose window / project panes.** Modeled loosely on reference photo (2): a radial wheel of wedge-shaped stained-glass panes around a center point, stone tracery separating them. Each of the 6 panes is one project slot, its demo media rendered as if backlit glass (emissive/rim-lit, not the current metallic card face). Vague/dark stone surround, same as the gate — the panes themselves are the only bright, colorful thing on screen at that beat.
+
+**Camera choreography:**
+
+| Beat | Shot | Trigger |
+|---|---|---|
+| 1 | Static, head-on framing on the closed gate | Landing / idle |
+| 1a | Doors crack open a few degrees, light shaft through the gap, eases back on hover-out | Hover (desktop only) |
+| 2 | Doors swing fully open on their hinges; About copy fades in mid-swing | Click / tap |
+| 3 | Camera glides forward through the doorway into the nave, tilts upward, holds short of the window; "How I Work" content appears | Scroll (post-click only) |
+| 4 | Camera completes the pan/tilt to frame the rose window head-on; panes become interactive | Continued scroll |
+| — | Camera path reverses symmetrically back to beat 1 (gate stays open) | Scroll back up |
+
+**Atmosphere.** Dust motes drifting through implied light shafts replace the dot field — same cursor-repel and `prefers-reduced-motion` behavior, restyled. See EDD for the component-level detail.
+
+**Audio.** Evaluated against the hashgraphvc.com reference (which has a sound toggle) and explicitly declined by Shayne, 2026-07-25. Not in scope.
+
 ### AI Workflow section copy (locked, superseded 2026-07-22)
 
 **Retired** in favor of the redesign below — kept here for history, not reproduced anywhere in the live site.
@@ -229,6 +278,7 @@ Two 21st.dev candidates were evaluated against the above; neither is used as a d
 
 - **`scroll-expansion-hero`** — real reference for the expand mechanic's visual feel, but its actual event-handling (full-page wheel hijack, single-instance state, no click fallback, `next/image` dependency) doesn't fit the hover-scoped, repeatable-per-card, Vite-based design locked above. Treat as visual/interaction inspiration only.
 - **`dotted-surface`** — good structural starting point for the background (already full-page, already Three.js), but needs `next-themes` removed, the fade-in/out-of-sync opacity animation built from scratch, and `prefers-reduced-motion` handling added.
+- **hashgraphvc.com** (evaluated 2026-07-25 via text-level fetch — browser automation wasn't connected this session, so this wasn't visually inspected) — three-act scroll-revealed structure with sparse click-driven CTAs and an ambient sound toggle; used as directional confirmation of the cinematic-reveal pacing (matches the gate → nave → rose-window beats independently arrived at), not copied structurally. Its sound toggle specifically evaluated and declined — see "Audio" above. Worth a real visual pass later if the extension gets connected — nothing here depends on it.
 
 ---
 
