@@ -15,12 +15,14 @@ export interface CameraWaypoint {
 
 // Tight enough that the gate itself dominates the frame — a hero
 // object with a little breathing room, not a small shape floating in a
-// lot of empty background. Matches the gate's actual built dimensions
-// (see gateAsset.ts): ~4.25 wide, ~5.9 tall base-to-peak, vertical
-// center around y=1.
+// lot of empty background. Retuned again to frame just the gate
+// (ground through the arch peak, ~y=-1.9 to 3.85) without reaching high
+// enough to catch the rose window's own bottom edge (~y=4.15) — Shayne
+// flagged the window peeking through at the top of this shot as a real
+// leak, not an intentional teaser.
 export const GATE_WAYPOINT: CameraWaypoint = {
-  position: new THREE.Vector3(0, 0.4, 7.2),
-  lookAt: new THREE.Vector3(0, 1, 0),
+  position: new THREE.Vector3(0, 0.45, 7.6),
+  lookAt: new THREE.Vector3(0, 0.85, 0),
 };
 
 // Click-triggered (not scroll-driven — see applyJourneyCamera below):

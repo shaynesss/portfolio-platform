@@ -13,47 +13,12 @@ import {
   DOOR_FULL_OPEN_RAD,
 } from "@/lib/gateAsset";
 import { buildNave } from "@/lib/naveAsset";
-import { buildRoseWindow, type RoseWindowAsset } from "@/lib/roseWindowAsset";
+import { buildRoseWindow, WINDOW_CENTER, type RoseWindowAsset } from "@/lib/roseWindowAsset";
+import { buildFacade } from "@/lib/facadeAsset";
+import { buildDustMotes } from "@/lib/dustMotes";
 
 const BACKGROUND_COLOR = 0x030304;
 const CAMERA_FOV = 45;
-
-// Placeholder atmosphere for the camera-rig scaffold only — a static
-// scattered point cloud spanning the whole camera path (gate through
-// rose-window), just so there's something in frame to read camera
-// motion/parallax against. Deliberately NOT a port of DotBackground's
-// dot field: that shader's size/fog falloff is tuned for a fixed camera
-// at a fixed distance from a flat plane, which doesn't hold up once the
-// camera itself travels through several world units of depth. The real
-// "dust motes in light shafts" restyle (cursor-reactive, reduced-motion
-// aware) is its own later task once the camera path is locked against
-// real geometry.
-const PLACEHOLDER_POINT_COUNT = 900;
-const PLACEHOLDER_SPREAD_X = 14;
-const PLACEHOLDER_SPREAD_Y = 10;
-const PLACEHOLDER_Z_FRONT = 14;
-const PLACEHOLDER_Z_BACK = -16;
-
-function buildPlaceholderAtmosphere() {
-  const positions = new Float32Array(PLACEHOLDER_POINT_COUNT * 3);
-  for (let i = 0; i < PLACEHOLDER_POINT_COUNT; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * PLACEHOLDER_SPREAD_X;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * PLACEHOLDER_SPREAD_Y;
-    positions[i * 3 + 2] =
-      PLACEHOLDER_Z_FRONT + Math.random() * (PLACEHOLDER_Z_BACK - PLACEHOLDER_Z_FRONT);
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  const material = new THREE.PointsMaterial({
-    color: 0xe4e4e7,
-    size: 0.045,
-    sizeAttenuation: true,
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-  });
-  return new THREE.Points(geometry, material);
-}
 
 interface CathedralSceneProps {
   gateOpened: boolean;
@@ -122,7 +87,11 @@ export default function CathedralScene({
     ).matches;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(BACKGROUND_COLOR, 6, 26);
+    // Fog starts well past the gate itself now (was 6 — close enough to
+    // dim the hero object it was standing in for the whole "too dark"
+    // complaint) — it should only fade the deep nave/rose-window
+    // distance, never anything in the immediate foreground.
+    scene.fog = new THREE.Fog(BACKGROUND_COLOR, 14, 30);
 
     const camera = new THREE.PerspectiveCamera(
       CAMERA_FOV,
@@ -137,25 +106,61 @@ export default function CathedralScene({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(BACKGROUND_COLOR, 1);
+    // Without tone mapping, MeshStandardMaterial's PBR response to these
+    // light intensities reads muddy/underexposed regardless of how far
+    // the lights themselves get pushed up — this was the real cause of
+    // "everything is too dark to make out," not just weak lights.
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.5;
     container.appendChild(renderer.domElement);
 
-    const atmosphere = buildPlaceholderAtmosphere();
-    scene.add(atmosphere);
+    const dustMotes = buildDustMotes();
+    scene.add(dustMotes.points);
 
-    // Minimal lighting — MeshStandardMaterial (the gate's stone/wood)
-    // needs at least one light source to read at all. Kept dim and
-    // warm: the Design Brief wants the scene dark, with the gate's own
-    // hover/open glow doing the visual work, not general illumination.
-    const ambient = new THREE.AmbientLight(0x3a3a42, 0.6);
-    const keyLight = new THREE.DirectionalLight(0xcfd0d6, 0.7);
-    keyLight.position.set(2, 4, 6);
-    scene.add(ambient, keyLight);
+    // Lighting rig — now that the gate/nave/ring carry real stone/wood
+    // textures (see proceduralTextures.ts), directional light actually
+    // matters: a flat ambient-only scene would leave that surface detail
+    // invisible. Kept overall dark per the Design Brief (stained glass
+    // is meant to be the only strong color), with three roles: a warm
+    // key raking across the stone/wood from outside the gate, a dim
+    // cool rim from deep in the nave so silhouettes separate from the
+    // near-black background instead of flattening into it, and a warm
+    // point light at the rose window itself — the narrative's actual
+    // light source, only reaching far enough to warm the nave stone
+    // once the camera is close to arriving.
+    const ambient = new THREE.AmbientLight(0x44444e, 1.1);
+    const keyLight = new THREE.DirectionalLight(0xffdca8, 1.8);
+    keyLight.position.set(2.5, 5, 6);
+    const rimLight = new THREE.DirectionalLight(0x8fa0c2, 0.5);
+    rimLight.position.set(-1.5, 3, -10);
+    const windowLight = new THREE.PointLight(0xffd9a0, 2.4, 15, 2);
+    windowLight.position.copy(WINDOW_CENTER).add(new THREE.Vector3(0, -0.3, 0.6));
+    // Small warm accent right at the arcade band (naveAsset.ts) so its
+    // carved openings actually catch some light of their own instead of
+    // relying entirely on the window/key lights reaching that far.
+    const arcadeLight = new THREE.PointLight(0xffcf9a, 1.2, 7, 2);
+    arcadeLight.position.set(0, 3.9, 1.2);
+    // A light right at the exterior gate itself — everything above was
+    // tuned for the nave interior; the closed-gate landing beat needs
+    // its own direct source so the facade actually reads before the
+    // camera has gone anywhere. A PointLight specifically, not a
+    // DirectionalLight — directional lights have no falloff at all (only
+    // direction matters, not position), so the first version of this
+    // lit the facade wall uniformly bright even deep in the nave, long
+    // after the camera had left the gate behind. This one fades out
+    // with distance and never reaches past the gate/hinge area.
+    const exteriorLight = new THREE.PointLight(0xf5ead0, 6, 14, 2);
+    exteriorLight.position.set(0, 2, 8);
+    scene.add(ambient, keyLight, rimLight, windowLight, arcadeLight, exteriorLight);
 
     const gate = buildGate();
     scene.add(gate.group);
 
     const nave = buildNave();
     scene.add(nave.group);
+
+    const facade = buildFacade();
+    scene.add(facade.group);
 
     const roseWindow = buildRoseWindow();
     scene.add(roseWindow.group);
@@ -305,6 +310,28 @@ export default function CathedralScene({
       camera.position.copy(camPosition);
       camera.lookAt(camLookAt);
 
+      // Re-cast from the last known pointer position against the
+      // CURRENT camera, every frame — not just on pointermove. The
+      // camera moves through the whole journey even when the mouse
+      // doesn't, so the repel ray needs to track where the cursor
+      // currently points on screen as that view changes underneath it.
+      raycaster.setFromCamera(pointerNDC, camera);
+      // Dust only exists once the gate is open — the gate-doorway
+      // shaft's origin sits at z=1, in front of the closed doors (z=0),
+      // so those motes were genuinely positioned between the camera and
+      // the door and rendered correctly in front of it, reading as
+      // "bleeding through" the closed gate. Simplest fix: the motes
+      // narratively represent light spilling through an open doorway,
+      // so they just shouldn't exist at all until it's actually open.
+      dustMotes.points.visible = gateOpenedRef.current;
+      dustMotes.update(
+        delta,
+        clock.elapsedTime,
+        raycaster.ray.origin,
+        raycaster.ray.direction,
+        prefersReducedMotion,
+      );
+
       roseWindow.updateExpand(
         projectExpandProgressRef.current,
         paneHoverRef.current,
@@ -329,10 +356,10 @@ export default function CathedralScene({
       renderer.domElement.removeEventListener("pointermove", handlePointerMove);
       renderer.domElement.removeEventListener("click", handleClick);
       if (frameId !== null) cancelAnimationFrame(frameId);
-      atmosphere.geometry.dispose();
-      (atmosphere.material as THREE.Material).dispose();
+      dustMotes.dispose();
       gate.dispose();
       nave.dispose();
+      facade.dispose();
       roseWindow.dispose();
       roseWindowAssetRef.current = null;
       renderer.dispose();

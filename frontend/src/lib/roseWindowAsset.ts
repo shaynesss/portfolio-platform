@@ -11,13 +11,19 @@
 import * as THREE from "three";
 import type { Project } from "@/lib/api";
 import { crossfadeT, expandGrowthT } from "@/lib/cardLayout";
+import { createStoneTexture } from "@/lib/proceduralTextures";
 
 const PANE_COUNT = 6;
 export const WINDOW_CENTER = new THREE.Vector3(0, 6.4, 0.2);
 const OUTER_RADIUS = 1.9;
 const GAP_ANGLE = 0.05;
-const STONE_COLOR = 0x2c2c32;
 const CANVAS_SIZE = 512;
+// The window's full visual footprint (panes + decorative ring +
+// tracery frame) — 2.25 = (OUTER_RADIUS+0.2) decorative outer radius
+// + 0.15 tracery extension, matching the actual geometry built below.
+// Exported so naveAsset.ts's arcade band and facadeAsset.ts's panel
+// sizing can stay in sync with this file without duplicating the math.
+export const WINDOW_TOTAL_RADIUS = 2.25;
 
 // Jewel-tone tint per pane — glass color even before/regardless of
 // whatever image is showing through it.
@@ -208,10 +214,62 @@ export function buildRoseWindow(): RoseWindowAsset {
     panes.push(handle);
   }
 
-  // Stone tracery ring framing the window.
-  const ringGeometry = track(new THREE.RingGeometry(OUTER_RADIUS - 0.04, OUTER_RADIUS + 0.22, 48));
+  // Decorative outer ring — non-interactive smaller petals surrounding
+  // the 6 real panes, so the window reads as a two-ring window like the
+  // reference (16-20+ petals) without touching the 6-slot interaction
+  // model at all: no hitTarget coverage, no hover/click, no canvas
+  // texture — just a flat tinted wedge per petal.
+  const DECORATIVE_PETAL_COUNT = 12;
+  const DECORATIVE_GAP_ANGLE = 0.035;
+  const DECORATIVE_INNER_RADIUS = OUTER_RADIUS + 0.05;
+  // Shrunk from +0.5 -> +0.2 (see WINDOW_TOTAL_RADIUS below) — the
+  // wider version pushed the window's overall footprint down far enough
+  // to nearly collide with the gate's arch peak beneath it.
+  const DECORATIVE_OUTER_RADIUS = OUTER_RADIUS + 0.2;
+  const decorativeAnglePerPetal = (Math.PI * 2) / DECORATIVE_PETAL_COUNT;
+  for (let i = 0; i < DECORATIVE_PETAL_COUNT; i++) {
+    const thetaStart = i * decorativeAnglePerPetal + DECORATIVE_GAP_ANGLE / 2;
+    const thetaLength = decorativeAnglePerPetal - DECORATIVE_GAP_ANGLE;
+    const geometry = track(
+      new THREE.RingGeometry(
+        DECORATIVE_INNER_RADIUS,
+        DECORATIVE_OUTER_RADIUS,
+        8,
+        1,
+        thetaStart,
+        thetaLength,
+      ),
+    );
+    const tint = PANE_TINTS[i % PANE_TINTS.length];
+    const material = track(
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(tint.r / 255, tint.g / 255, tint.b / 255),
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+      }),
+    );
+    group.add(new THREE.Mesh(geometry, material));
+  }
+
+  // Stone tracery ring framing the window, now pushed out past the
+  // decorative petals. RingGeometry's UVs wrap angularly (u) and
+  // radially (v) rather than a flat box mapping, so the repeat below
+  // tiles around the circumference, not across a rectangle — 16 gives
+  // a modest segmented-stone look without the texture reading as a
+  // smear at this ring's thinness.
+  const ringTexture = track(createStoneTexture());
+  ringTexture.repeat.set(16, 1);
+  const ringGeometry = track(
+    new THREE.RingGeometry(DECORATIVE_OUTER_RADIUS - 0.02, DECORATIVE_OUTER_RADIUS + 0.15, 48),
+  );
   const ringMaterial = track(
-    new THREE.MeshStandardMaterial({ color: STONE_COLOR, roughness: 0.9, side: THREE.DoubleSide }),
+    new THREE.MeshStandardMaterial({
+      map: ringTexture,
+      color: 0xffffff,
+      roughness: 0.9,
+      side: THREE.DoubleSide,
+    }),
   );
   group.add(new THREE.Mesh(ringGeometry, ringMaterial));
 
