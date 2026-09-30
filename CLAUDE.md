@@ -20,7 +20,8 @@ See `SPEC.md` for the full Phase 1 spec (Definition, PRD, EDD, Design Brief) —
 
 ### Architecture (locked, do not default elsewhere)
 - **Backend:** FastAPI + PostgreSQL, deployed to **Railway**. Persistent backend, real DB connections.
-- **Frontend:** React/Vite, deployed to **Vercel**. Read-only — never calls GitHub or any third party directly, always goes through the backend.
+- **Frontend:** Vite + TypeScript, deployed to **Vercel**. Static since Overhaul 2 (2026-09-29): it never calls GitHub or the backend; content is typed files in the repo.
+- **Backend and TUI (below) are v1 and dormant** since Overhaul 2; their Railway deployment was removed. Kept in the repo as a record, not as a dependency.
 - **TUI:** Python Textual, **local only, never deployed**. Sole write path for all content (projects, About, AI Workflow copy). No admin surface exists on the web side — don't add one.
 - **GitHub stats:** fetched backend-side only, PAT lives in `backend/.env` (`GITHUB_TOKEN`). Fetched on TUI "add project" and on manual TUI-triggered refresh. **No cron / scheduled refresh** — staleness between manual touches is accepted by spec, don't add a scheduler to "fix" this.
 
@@ -28,10 +29,11 @@ See `SPEC.md` for the full Phase 1 spec (Definition, PRD, EDD, Design Brief) —
 - `projects`: up to 6 slots, ordered by `display_order`, TUI-editable. Includes `demo_media_type` (`image`/`video`) + `demo_media_url` (+ `video_source`: `youtube`/`self_hosted`).
 - `pages`: singleton content blocks for About body, LinkedIn/Devpost URLs, and the locked AI Workflow copy (do not paraphrase or regenerate that copy — it's final, reproduce verbatim from `SPEC.md` §4).
 
-### Frontend rendering constraints
-- **One shared Three.js scene**, not one canvas per project card — up to 6 simultaneous WebGL contexts is out. All shard instances share a single renderer/scene, each with independent rotation phase/speed/axis.
-- **Shard expand mechanic** is a custom hover-scoped scroll capture — the `scroll-expansion-hero` reference is inspiration only, not a drop-in (it hijacks page-level wheel events and has no click fallback). Full behavior spec in `SPEC.md` §4 "Expand mechanism — full detail"; each shard's expand state must be fully independent of the others.
-- **Dot background** is adapted from `dotted-surface` but needs `next-themes` stripped, a from-scratch randomized-phase opacity fade (the reference only animates Y-position), and `prefers-reduced-motion` handling added — none of that exists in the reference component.
+### Frontend (Overhaul 2, "The Shallows", locked 2026-09-29; `SPEC.md` §5 is the source of truth)
+- **Vite + TypeScript, no framework, no runtime dependencies.** React, Three.js, Tailwind and shadcn were removed on purpose. Do not reintroduce them, and do not add WebGL: the owner rejected Three.js-style 3D; all depth is CSS and canvas 2D.
+- **Content lives in `frontend/src/content/`** as typed modules. The frontend makes no API calls; the backend and TUI below are dormant until a data-layer decision is made.
+- **One screen:** the night scene is the whole page. The card catalogue, the lamp (Noctis) and the hidden details are specified in `SPEC.md` §5; change them there first.
+- **Write-ups** are four modules: "What it is" beside the title and tools, then "How it works" and "What it solves". Plain words, real terms, technical substance; no stats, no "my part", no "hard part". Noctis is "the harness that drives daily development", never "the harness every project was built with" (the hackathon projects were not).
 - No dark/light theme toggle in scope. Hardcode the dark palette.
 
 ### Out of scope (do not build, even if it seems natural)

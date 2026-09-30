@@ -2,7 +2,9 @@
 
 Status: Definition, PRD, EDD, and Design Brief all locked (2026-07-16). Ready for Phase 2 (Setup) in Claude Code.
 
-**Frontend Overhaul — Cathedral redesign, locked 2026-07-25 (Track: Overhaul).** Ground-up rework of the frontend's narrative and visual system, replacing the independent-section/crossfade model with a single continuous scroll-driven camera flythrough of a stylized cathedral. See the addenda in PRD §2 ("Frontend narrative overhaul"), EDD §3 ("Cathedral scene architecture"), and Design Brief §4 ("Cathedral redesign") — each supersedes the sections it touches; untouched decisions (data model, backend, TUI, deployment targets) stay locked as-is.
+**Frontend Overhaul 2, "The Shallows", locked 2026-09-29 (Track: Overhaul).** Replaces the whole frontend again. The cathedral below was scrapped on 2026-08-06 and never shipped. The site is now one screen: a code-painted night scene in which a library card catalogue stands in still water, lit by a lamp. Each drawer is a project; the lamp is Noctis OS. The frontend no longer reads the backend: content is typed files in the repo. Full detail in §5 at the end of this file, which supersedes every frontend section above it (PRD user flow, EDD frontend notes and cathedral architecture, the whole Design Brief). Signed off by Shayne on 2026-09-29 ("start building it out now, replacing the old portfolio URL") after four rounds of clickable sketches.
+
+**Frontend Overhaul, Cathedral redesign, locked 2026-07-25, scrapped 2026-08-06 (never deployed).** Ground-up rework of the frontend's narrative and visual system, replacing the independent-section/crossfade model with a single continuous scroll-driven camera flythrough of a stylized cathedral. See the addenda in PRD §2 ("Frontend narrative overhaul"), EDD §3 ("Cathedral scene architecture"), and Design Brief §4 ("Cathedral redesign") — each supersedes the sections it touches; untouched decisions (data model, backend, TUI, deployment targets) stay locked as-is.
 
 ---
 
@@ -307,3 +309,44 @@ Two 21st.dev candidates were evaluated against the above; neither is used as a d
 ---
 
 *End of Phase 1 spec. Next: Phase 2 (Setup) in Claude Code — repo creation, `.env.example`, project-level `CLAUDE.md`, folder structure per the EDD above.*
+
+---
+
+## 5. Overhaul 2: The Shallows (locked 2026-09-29)
+
+Supersedes every frontend decision above. Data model, backend and TUI sections stay as a record of v1 but no longer feed the live site (see EDD below). Reached through four rounds of clickable sketches and eight research passes, all in the session of 2026-09-29; the reasoning and references are in the vault at `wiki/Portfolio Platform/Overview.md`.
+
+### PRD
+
+- **One screen.** The page is a single night scene: Shayne's name, one line ("Final-year Data Science student", no university named), "UK" and four links (GitHub, LinkedIn, Devpost, email) sit in the sky; a card catalogue stands in still water to the right, with a lamp on top.
+- **Projects are drawers.** v1 ships two: GMI! (June 2026, Romax Digital track winner, CCCU Hackabury) and AI.GMI (May 2026, MLH Vultr track winner, KentHackIt). A client project is held back until it can be shown publicly (Shayne, 2026-09-30); its approved write-up is kept outside this repository. The Real-Time Anomaly Detection Dashboard is also held back for now. Empty drawers stay blank; the first one after the projects stands ajar with an "In progress" guide tab, which opens a lone "Work in progress" card.
+- **Opening a drawer** slides it out; an index card (a guide card with a tab) rises and settles on the left, and the project card opens on the right.
+- **Project card: one column, read like a museum label beside its object** (revised twice on 2026-09-29; the two-by-two grid had inconsistent sizes and a title that was not read first). Order: title; a meta row (badge, "Track winner" lit gold or "Live", then category and date); the description with no label; "How it works"; "What it solves"; then, under a hairline, the tools as outlined tags and the links. Three sizes on a 1.25 scale: title 40/44 Instrument Serif, all reading text 16/24 Instrument Sans (the sections one shade dimmer than the lead), labels, meta, tools and links 12/16 IBM Plex Mono. Spacing on an 8 px grid. The column is `min(30em, 34vw)` wide (about 66 characters, 480 px at 1440) and centred in the right half, level with the index card centred in the left half. On a phone, the same order under the card. Based on the V&A, Getty and Smithsonian label guides, Apple's split-view guidance, NN/g on scanning and visual hierarchy, and Butterick on line length.
+- **Write-ups are short:** about 100 to 120 words per card, no sentence much over 20 words. The description is one or two sentences, "How it works" names the architecture and one decision with its payoff, "What it solves" says what the project is for. Plain words, real terms (NN/g: concise web text tested 58% more usable; GOV.UK: 25-word sentence limit).
+- **Index card:** category tab, call number, title and date. No tags. The in-progress card says only "Work in progress".
+- **The lamp is Noctis OS, "Workflow System: the harness that drives daily development"** (not the harness every project was built with: the hackathon projects were not). Clicking the shade tilts it and projects the panel onto the mist: What it is, How it works, What it solves (from the Noctis README; "What it solves" tells how one methodology file for every kind of work became five modes with their own methods, with the vault and the SQLite FTS5 history as the store behind every action), and an architecture diagram redrawn from the README's system diagram (body: Tauri shell, PTY host, claude; brain: MCP server, vault; SQLite FTS5 history; any MCP client). No fact row under it; the code link sits beside the kicker.
+- **Arrival:** the page opens dark and the lamp flickers on. Then a one-time "lantern test" (the beam climbs to where the panel appears and withdraws) shows that the lamp does something; hovering the shade tilts it, with no beam. The only visible hint text reads "interact with the lamp".
+- **Hidden details (eight):** the pull cord (switches the lamp), ripples when the water is clicked, a skipped stone on a fast flick, a dimmer on the left and right arrow keys, moths after 45 seconds of lamplight, a drifting bottle whose note shows how many of the eight have been found, typing "noctis", and holding Alt to show each drawer's commit count. None is needed to read the portfolio.
+- **Out of scope for this overhaul:** a new editing tool or data layer (deferred; content is edited in code for now), the bookcase variant, alternative scenes, a phone-specific design beyond "works and reads".
+- **Launch (2026-09-30):** the address is `shayneyong.vercel.app` (free; a paid domain such as `shayneyong.com`, about $10.46 a year at Cloudflare, can follow). Link previews use a 1200 x 630 capture of the scene (`frontend/public/og.jpg`) with Open Graph and Twitter tags and a canonical URL. Visit counting uses Umami Cloud's free plan: no cookies, only on the live host, counting page views plus drawer opens, the Noctis projection, hidden details found and outbound links. Under the UK's 2026 statistics exception it carries a small notice and an opt-out on the page instead of a consent banner. Session recordings and heatmaps were considered and left out, because UK visitors would have to consent to them first.
+
+### EDD
+
+- **Frontend:** Vite and TypeScript with no framework and no runtime dependencies. React, Three.js, Tailwind and shadcn are removed. Hand-built CSS; this Design Brief declares a hand-built system, so the spine's Tailwind and shadcn setup steps do not apply.
+- **Content:** typed modules in `frontend/src/content/`. The frontend makes no network calls except Google Fonts. The FastAPI backend and Textual TUI stay in the repo untouched but dormant (their Railway deployment was already removed); whether content returns to a backend is a later decision.
+- **Scene:** sky and cabinet in CSS. The water is a canvas: a wave-equation height grid at a quarter of screen resolution (Hugo Elias's method) refracts, at half resolution, a reflection that is redrawn upside down from the cabinet's own layout into a hidden canvas. The lamp is one value from 0 to 1 that drives the glow, the shade, the water and a 2,700 K to 1,800 K colour temperature. The cord is a seven-point Verlet rope. The projection cone is the convex hull of the shade and the panel, used as a clip path.
+- **Performance budget:** about 1 ms of water per frame on a laptop; everything pauses when the tab is hidden, the scene is off screen or a card is open. Reduced motion shows a static, lit scene.
+- **Accessibility:** every drawer, the shade, the cord and the bottle are real buttons with labels; Esc closes anything open; focus returns to what opened it; the diagram has a text description; a `<noscript>` list carries the projects.
+- **Deployment:** the same Vercel project (root `frontend/`), static output, security headers in `frontend/vercel.json`.
+
+### Design Brief
+
+- **Scene, "Nocturne, stars":** sky `#10161d` to `#384d5f` at a horizon exactly half way down, water below it a step darker (`#090d12` at the bottom), horizontal ribbons in the water after Whistler, about seventy stars that twinkle and reflect faintly, a haze along the horizon. One impossible thing: furniture standing in the sea.
+- **The one warm light is the lamp.** The only other warm colour is the gold "Track winner" badge, at Shayne's request. Metal is silver, not gold: label holders, drawer pulls, the lamp's stem and foot.
+- **Type:** Instrument Serif (display, italic accents), Instrument Sans (body), IBM Plex Mono (labels, call numbers, tags).
+- **Card catalogue:** dark wood, three columns of drawers, silver label holders with paper labels, half-round silver pulls.
+- **Index card, the guide-card design:** card stock by category (Hackathon buff `#D8C39D`, Client salmon `#E2B8A4`, Personal blue `#A9BCCD`, In progress ivory `#ECE5D3`), a tab one third wide carrying the category, the Dewey call number top-left (GMI! 658.85, AI.GMI 650.14), the title in Instrument Serif, the date under it, two or three subject-style tags, and the rod hole. Content is centred between the tab and the hole.
+- **Project card:** as the PRD lists, on the blurred scene, silver-white type, badge colours green for Live and gold for Track winner.
+- **Noctis projection:** warm light on the mist with a faint grid, a six-node architecture diagram that draws itself, and one dot that travels the approval loop once.
+- **Motion:** arrival flicker under three flashes a second; the cord sways at most three times; everything with movement has a reduced-motion state.
+- **Research behind these choices** (all fetched 2026-09-29): Magritte, Whistler's Nocturnes, Sugimoto, Kawase Hasui and Yoshida Hiroshi for the scene; library trade manuals, ODLIS and the Library of Congress for the cards; Norman on signifiers and NN/g on one-time hints for the lamp; Hugo Elias for the water; Fabian et al. 2024 for the moths.
