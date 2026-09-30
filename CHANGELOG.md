@@ -2,6 +2,9 @@
 
 ## 2026-09-30
 
+- **Launched** at `shayneyong.vercel.app`: the push to `main` built and deployed through Vercel's GitHub connection, and the live site was smoke-tested (drawers, cards, analytics, link preview, security headers).
+- Brought the repository's documents up to date with the launched site: `CLAUDE.md`'s working rules and checks describe this version rather than v1's Three.js cards and backend; `SPEC.md` §5 records the launch, the real content file, the analytics calls and the module list, and drops the index-card tags it still listed; `README.md` corrects where each part of the content lives and the page size; `STATUS.md` describes the live site.
+- Removed the `tags` field from the project data: nothing had shown it since the index cards lost their tags on 2026-09-29.
 - Launch preparation: the canonical address is `shayneyong.vercel.app`; link previews use a 1200 x 630 capture of the scene with Open Graph and Twitter tags; Umami Cloud visit counting (cookie-free, live host only, with drawer, projection, hidden-detail and outbound-link events) is switched on, with a notice and opt-out on the page. The Content Security Policy allows Umami's script and collection endpoint.
 - Noctis's "What it solves" now tells where it came from: one methodology file for every kind of work, split into five modes, with the vault and the SQLite FTS5 history as the store behind every action.
 - Removed the fact row under the Noctis panel (it also named the search index differently from the diagram); the code link moved up beside the panel's heading.

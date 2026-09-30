@@ -1,6 +1,8 @@
 /*
- * Everything the site says lives here. Edit a project's words in this file and the
- * card, the index card and the page's noscript fallback all follow.
+ * The projects, the in-progress drawer and the hidden details. The drawers, index
+ * cards and project cards are built from this file. The intro, the Noctis panel and
+ * the <noscript> fallback are written in index.html, so a change to a project's
+ * words belongs in both places.
  */
 
 export type Category = "Hackathon" | "Client" | "Personal" | "In progress";
@@ -13,9 +15,7 @@ export interface Project {
   badge?: { text: string; tone: "gold" | "live" };
   /** Dewey Decimal class and cutter, printed top-left on the index card. */
   callNumber: [string, string];
-  /** Subject headings, library style; technical names go in `tools`. */
-  tags: string[];
-  /** "What it is": plain words, first. */
+  /** The lead, shown first with no label: what it is, in plain words. */
   description: string;
   how: string;
   /** "What it solves": the problem it takes away, and for whom. */
@@ -34,7 +34,6 @@ export const PROJECTS: Project[] = [
     date: "June 2026",
     badge: { text: "Track winner", tone: "gold" },
     callNumber: ["658.85", "GMI"],
-    tags: ["Web scraping", "Digital wallet passes", "Large language models"],
     description:
       "A tool we built for Romax at Hackabury. Paste in any company's website and within seconds you get a working Apple or Google Wallet card in its branding.",
     how:
@@ -52,7 +51,6 @@ export const PROJECTS: Project[] = [
     date: "May 2026",
     badge: { text: "Track winner", tone: "gold" },
     callNumber: ["650.14", "AIG"],
-    tags: ["Multiagent systems", "Résumés (Employment)--Evaluation", "Speech synthesis"],
     description:
       "AI.GMI grades and roasts your CV. Upload a PDF, pick an industry, and get a score for each section and the three to five fixes that matter most. Then a synthetic voice reads out a short roast.",
     how:
@@ -72,7 +70,6 @@ export const IN_PROGRESS: Project = {
   category: "In progress",
   date: "2026–",
   callNumber: ["", ""],
-  tags: [],
   description: "",
   how: "",
   solves: "",
