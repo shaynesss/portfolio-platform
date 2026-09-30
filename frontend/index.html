@@ -1,12 +1,144 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Shayne Yong</title>
+    <meta name="description" content="Shayne Yong, final-year Data Science student. Machine-learning pipelines, AI agents, and the tooling that keeps them reliable." />
+    <meta name="theme-color" content="#0a0f14" />
+    <meta property="og:title" content="Shayne Yong" />
+    <meta property="og:description" content="Final-year Data Science student. Machine-learning pipelines, AI agents, and the tooling that keeps them reliable." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://shayneyong.vercel.app/" />
+    <meta property="og:image" content="https://shayneyong.vercel.app/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Shayne Yong: a lamp-lit card catalogue standing in still water at night." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Shayne Yong" />
+    <meta name="twitter:description" content="Final-year Data Science student. Machine-learning pipelines, AI agents, and the tooling that keeps them reliable." />
+    <meta name="twitter:image" content="https://shayneyong.vercel.app/og.jpg" />
+    <link rel="canonical" href="https://shayneyong.vercel.app/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400..600&family=Instrument+Serif:ital@0;1&display=swap" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="grain" aria-hidden="true"></div>
+
+    <main class="stage" id="stage">
+      <canvas class="sky" id="sky" aria-hidden="true"></canvas>
+      <div class="haze" aria-hidden="true"></div>
+      <canvas class="water" id="water" aria-hidden="true"></canvas>
+      <div class="water-fade" aria-hidden="true"></div>
+
+      <button class="bottle" id="bottle" type="button" aria-label="A bottle drifting past. Read the note inside" hidden>
+        <span class="glass"></span><span class="scroll"></span><span class="cork"></span>
+        <span class="bottle-reflection" aria-hidden="true"><span class="glass"></span></span>
+      </button>
+
+      <div class="case-wrap" id="wrap">
+        <div class="lamp" id="lamp">
+          <button class="shade" id="shade" type="button" aria-label="Noctis OS, the workflow system. Project it" aria-expanded="false" aria-controls="panel"></button>
+          <span class="stem"></span><span class="foot"></span>
+        </div>
+        <nav class="cabinet" id="cabinet" aria-label="Projects"></nav>
+      </div>
+      <div class="lap" id="lap" aria-hidden="true"></div>
+
+      <svg class="cord" aria-hidden="true">
+        <defs>
+          <radialGradient id="bead-silver" cx="35%" cy="30%"><stop offset="0" stop-color="#fff" /><stop offset=".5" stop-color="#a9b6cf" /><stop offset="1" stop-color="#2b3448" /></radialGradient>
+        </defs>
+        <polyline id="cordline" />
+        <circle id="beaddot" r="3.4" />
+      </svg>
+      <button class="bead" id="bead" type="button" aria-label="Pull the lamp cord"></button>
+
+      <div class="veil-dark" id="veil" aria-hidden="true"></div>
+      <div class="lampglow" aria-hidden="true"></div>
+      <div class="moths" id="moths" aria-hidden="true"></div>
+      <div class="stone" id="stone" aria-hidden="true"></div>
+      <div class="skips" id="skips" aria-hidden="true"></div>
+
+      <header class="intro">
+        <h1>Shayne <em>Yong</em></h1>
+        <p class="lede">Final-year Data Science student. I build end-to-end systems: machine-learning pipelines, AI agents, and the tooling that keeps them reliable.</p>
+        <p class="where">UK</p>
+        <ul class="links">
+          <li><a href="https://github.com/shaynesss" target="_blank" rel="noopener" data-umami-event="outbound" data-umami-event-to="github">GitHub <span aria-hidden="true">↗</span></a></li>
+          <li><a href="https://www.linkedin.com/in/shayne-yong-888388263/" target="_blank" rel="noopener" data-umami-event="outbound" data-umami-event-to="linkedin">LinkedIn <span aria-hidden="true">↗</span></a></li>
+          <li><a href="https://devpost.com/shayne-yong" target="_blank" rel="noopener" data-umami-event="outbound" data-umami-event-to="devpost">Devpost <span aria-hidden="true">↗</span></a></li>
+          <li><a href="mailto:shayne.yong@outlook.com" data-umami-event="outbound" data-umami-event-to="email">Email</a></li>
+        </ul>
+      </header>
+      <p class="hint">interact with the lamp</p>
+      <p class="privacy" id="privacy" hidden>Visits are counted without cookies. <button type="button" id="optout">Opt out</button></p>
+      <div class="keys" id="keys" role="dialog" aria-label="Keyboard" hidden>
+        <p><kbd>L</kbd>switch the lamp</p>
+        <p><kbd>←</kbd><kbd>→</kbd>dim or brighten it</p>
+        <p><kbd>Esc</kbd>close anything open</p>
+        <p class="keys-more">A few things are not on this list.</p>
+      </div>
+
+      <div class="testcone" id="testcone" aria-hidden="true"><i></i></div>
+      <div class="testscreen" id="testscreen" aria-hidden="true"></div>
+
+      <div class="proj" id="proj">
+        <div class="proj-dim" id="projdim"></div>
+        <div class="cone" id="cone"><i></i></div>
+        <div class="screen" id="screen"></div>
+        <section class="panel" id="panel" aria-labelledby="p-title">
+          <button class="p-close" id="p-close" type="button" aria-label="Turn the projection off">×</button>
+          <p class="p-kick">Noctis OS · Workflow System <a href="https://github.com/shaynesss/noctis-os" target="_blank" rel="noopener" data-umami-event="outbound" data-umami-event-to="noctis-code">Code <span aria-hidden="true">↗</span></a></p>
+          <h2 class="p-title" id="p-title" tabindex="-1">The harness that drives daily development.</h2>
+          <svg class="diagram" id="diagram" viewBox="0 0 472 254" role="img" aria-labelledby="dg-t dg-d">
+            <title id="dg-t">How Noctis fits together</title>
+            <desc id="dg-d">The body, which is replaceable: a Tauri and React shell talks over IPC to a PTY host, which hosts the interactive Claude Code CLI. The brain, which is durable: Claude Code calls the Noctis MCP server over stdio JSON-RPC, and the server searches and writes the vault of markdown files. Any other MCP client, such as Cursor or Zed, can use the same server. Session transcripts are indexed in SQLite FTS5 and promoted into the vault.</desc>
+            <defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8" fill="none" stroke="rgb(255 228 190 / .75)" stroke-width="1.2" /></marker></defs>
+            <rect class="group" x="0" y="12" width="132" height="140" rx="8" /><text class="grp" x="4" y="166">BODY · REPLACEABLE</text>
+            <rect class="group" x="340" y="94" width="132" height="144" rx="8" /><text class="grp" x="344" y="252">BRAIN · DURABLE</text>
+            <rect class="node" x="6" y="22" width="120" height="38" rx="6" /><text class="t1" x="66" y="38" text-anchor="middle">Tauri shell</text><text class="t2" x="66" y="52" text-anchor="middle">React · macOS</text>
+            <rect class="node" x="6" y="104" width="120" height="38" rx="6" /><text class="t1" x="66" y="120" text-anchor="middle">PTY host</text><text class="t2" x="66" y="134" text-anchor="middle">spawn · resume</text>
+            <rect class="node" x="176" y="104" width="120" height="38" rx="6" /><text class="t1" x="236" y="120" text-anchor="middle">claude</text><text class="t2" x="236" y="134" text-anchor="middle">interactive CLI</text>
+            <rect class="node" x="176" y="190" width="120" height="38" rx="6" /><text class="t1" x="236" y="206" text-anchor="middle">SQLite FTS5</text><text class="t2" x="236" y="220" text-anchor="middle">history + index</text>
+            <rect class="node" x="346" y="22" width="120" height="38" rx="6" /><text class="t1" x="406" y="38" text-anchor="middle">Any MCP client</text><text class="t2" x="406" y="52" text-anchor="middle">Cursor · Zed</text>
+            <rect class="node" x="346" y="104" width="120" height="38" rx="6" /><text class="t1" x="406" y="120" text-anchor="middle">MCP server</text><text class="t2" x="406" y="134" text-anchor="middle">stdio JSON-RPC</text>
+            <rect class="node gate" x="346" y="190" width="120" height="38" rx="6" /><text class="t1 gate-t" x="406" y="206" text-anchor="middle">Vault</text><text class="t2" x="406" y="220" text-anchor="middle">markdown · git</text>
+            <path class="edge" d="M66,62 L66,102" marker-start="url(#arrow)" marker-end="url(#arrow)" /><text class="verb" x="72" y="86">IPC</text>
+            <path class="edge" d="M128,123 L174,123" marker-start="url(#arrow)" marker-end="url(#arrow)" /><text class="verb" x="151" y="116" text-anchor="middle">hosts</text>
+            <path class="edge" d="M298,123 L344,123" marker-start="url(#arrow)" marker-end="url(#arrow)" /><text class="verb" x="321" y="116" text-anchor="middle">calls</text>
+            <path class="edge" d="M406,144 L406,188" marker-start="url(#arrow)" marker-end="url(#arrow)" /><text class="verb" x="412" y="170">search</text>
+            <path class="link" d="M406,62 L406,102" marker-start="url(#arrow)" marker-end="url(#arrow)" /><text class="verb" x="412" y="86">same door</text>
+            <path class="link" d="M236,144 L236,188" marker-end="url(#arrow)" /><text class="verb" x="242" y="170">transcripts</text>
+            <path class="link" d="M298,209 L344,209" marker-end="url(#arrow)" /><text class="verb" x="321" y="202" text-anchor="middle">promotes</text>
+            <path id="flow" d="M66,62 L66,123 L406,123 L406,188" fill="none" stroke="none" />
+            <circle class="dot" id="dot" r="2.6" />
+          </svg>
+          <dl class="p-rows">
+            <div><dt>What it is</dt><dd>A personal system in two halves. The brain is a folder of plain markdown (decisions and their reasons, the state of every job, the method for each kind of work) that any model can read. The body is a macOS app that runs AI sessions against it: today the Claude Code CLI, in five modes that differ by method, not capability.</dd></div>
+            <div><dt>How it works</dt><dd>Each session is the real, interactive Claude Code in a pseudo-terminal, with its mode, method and current job passed in at launch. Between the halves sits an MCP server hand-rolled over stdio JSON-RPC with no dependencies: BM25 search over the vault and every past conversation (SQLite FTS5), a job's context, and a way to propose a rule change.</dd></div>
+            <div><dt>What it solves</dt><dd>It started as one markdown file: a single methodology for every kind of work. Noctis splits it into five modes, each with its own method, so a session opens already knowing how that work is done, with nothing to re-explain. Behind every action sits a database: the git-versioned vault holds decisions and job state, and SQLite FTS5 indexes every past session. Nothing is lost, and every change can be traced or reverted.</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <div class="reading" id="read">
+        <div class="veil"></div>
+        <button class="close" id="close" type="button" aria-label="Close">×</button>
+      </div>
+    </main>
+
+    <noscript>
+      <section class="nojs">
+        <h2>Projects</h2>
+        <p><b>GMI!</b> (June 2026, Romax Digital track winner at CCCU's Hackabury). Paste any company's website and get a working Apple or Google Wallet membership card in its branding. FastAPI, httpx, BeautifulSoup, Gemini 2.5 Flash. <a href="https://github.com/shaynesss/Hackabury-June1-2">Code</a></p>
+        <p><b>AI.GMI</b> (May 2026, MLH Vultr track winner at KentHackIt). Grades and roasts a CV with two Gemini agents and a synthetic voice. FastAPI, pdfplumber, ElevenLabs, Vultr. <a href="https://github.com/shaynesss/KentHackIt-May9-10">Code</a></p>
+        <p><b>Noctis OS</b>, workflow system: the harness that drives daily development. A git-versioned markdown vault as the brain, a macOS app running Claude Code in five modes as the body, and a hand-rolled MCP server between them. <a href="https://github.com/shaynesss/noctis-os">Code</a></p>
+      </section>
+    </noscript>
+
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

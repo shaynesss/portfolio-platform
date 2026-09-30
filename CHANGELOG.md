@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-30
+
+- Launch preparation: the canonical address is `shayneyong.vercel.app`; link previews use a 1200 x 630 capture of the scene with Open Graph and Twitter tags; Umami Cloud visit counting (cookie-free, live host only, with drawer, projection, hidden-detail and outbound-link events) is switched on, with a notice and opt-out on the page. The Content Security Policy allows Umami's script and collection endpoint.
+- Noctis's "What it solves" now tells where it came from: one methodology file for every kind of work, split into five modes, with the vault and the SQLite FTS5 history as the store behind every action.
+- Removed the fact row under the Noctis panel (it also named the search index differently from the diagram); the code link moved up beside the panel's heading.
+
+## 2026-09-29: Overhaul 2, "The Shallows"
+
+- Replaced the whole frontend. The site is now one night scene: a card catalogue standing in still water, lit by a lamp. Drawers are projects; the lamp is Noctis OS and projects its panel onto the mist.
+- Rewrote the frontend in Vite and TypeScript with no framework and no runtime dependencies. Removed React, Three.js, Tailwind and shadcn. The built page is about 23 KB gzipped.
+- The water is a 2D wave-equation simulation that refracts a reflection redrawn from the cabinet's layout; the lamp is a single 0-to-1 value with a real colour temperature; the pull cord is a Verlet rope.
+- Content moved into `frontend/src/content.ts`. The frontend no longer calls the backend, whose Railway deployment had been removed.
+- New write-ups for GMI! and AI.GMI: a plain description, how it works, the hard part and the tools. Stats and "my part" removed.
+- Eight hidden details, a one-time hint that the lamp is interactive, full keyboard and reduced-motion support, a `<noscript>` fallback and a strict Content Security Policy.
+- The cathedral redesign (July 2026) was scrapped and never deployed.
+- Revised the same day after the first look: project cards became four modules of one shape (What it is beside the title and tools; How it works beside What it solves), centred in the right half of the screen; "The hard part" became "What it solves"; index cards lost their tags; the in-progress card says only "Work in progress"; the lamp's hover beam was removed, leaving the tilt; the hint reads "interact with the lamp"; the Noctis panel became "Workflow System: the harness that drives daily development", rewritten from its README with the diagram redrawn from the README's system diagram; the intro no longer names the university; tighter type on smaller laptops so every card fits at 1280 x 800 without scrolling.
+- Rebuilt the project card from research the same evening: one column read like a museum label (title, facts, description, How it works, What it solves, then tools and links), three type sizes on a 1.25 scale, an 8 px spacing grid, and a 66-character column centred in the right half, level with the index card. Write-ups cut from about 250 words per card to about 110, with no sentence much over 20 words. Every card fits at 1280 x 800, 1440 x 900 and 1536 x 864 without the smaller-laptop shrink.
+
 ## 2026-07-18 — Deployed live
 
 - Backend deployed to Railway (FastAPI + Postgres), migrated, GitHub-connected for auto-deploy on push to `main`.
